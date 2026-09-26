@@ -4,6 +4,8 @@
 
 ## Objective
 
+Recover where `MDNS_DIRECTLINK_IFACE=carplay0` is consumed and how the value reaches mDNS/AirPlay network binding.
+
 ## Trace Record
 
 | Field | Current state |
