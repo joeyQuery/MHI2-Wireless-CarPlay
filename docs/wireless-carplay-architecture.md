@@ -10,7 +10,7 @@ Evidence-driven integration map for Wireless CarPlay on Audi MHI2 / MU0678-class
 
 ## Edge notation
 
-Architecture diagrams use **solid arrows for established relationships** and **dashed arrows for target, inferred or unresolved relationships**. A dashed arrow is never evidence of a completed production path. Recovered execution/data-flow traces live in [`traces/`](../traces/README.md).
+Architecture diagrams use **solid arrows only for relationships established at the level claimed by the diagram** and **dashed arrows for target, inferred or unresolved relationships**. A subsystem-level relationship is not automatically a function-level execution edge. A dashed arrow is never evidence of a completed production path. Recovered execution/data-flow traces live in [`traces/`](../traces/README.md).
 
 # 1. Current Mapped Architecture
 
@@ -57,15 +57,15 @@ flowchart TB
     PHONE <-->|"Wi-Fi"| WLAN_RADIO
     BT_RADIO --> BTSTACK
     BTSTACK --> BLUETOOTH
-    BLUETOOTH --> IAP2
+    BLUETOOTH -.-> IAP2
     WLAN_RADIO --> UAP
     CM --> UAPUTL
     UAPUTL --> WLAN_RADIO
     UAP --> DNS
     UAP --> MDNS
     UAP --> PF
-    IAP2 --> DIO
-    MDNS --> DIO
+    IAP2 -.-> DIO
+    MDNS -.-> DIO
     DIO --> AIRPLAY
     AIRPLAY --> VIDEO
     AIRPLAY --> AUDIO
@@ -140,15 +140,15 @@ flowchart LR
 
     PHONE <-->|"Bluetooth"| BT
     PHONE <-->|"Wi-Fi"| WIFI
-    BT --> IAP2
-    WIFI --> DHCP
-    WIFI --> MDNS
-    IAP2 --> DIO
-    MDNS --> DIO
-    DIO --> AIRPLAY
-    AIRPLAY --> SCREEN
-    AIRPLAY --> AUDIO
-    DIO --> HID
+    BT -.-> IAP2
+    WIFI -.-> DHCP
+    WIFI -.-> MDNS
+    IAP2 -.-> DIO
+    MDNS -.-> DIO
+    DIO -.-> AIRPLAY
+    AIRPLAY -.-> SCREEN
+    AIRPLAY -.-> AUDIO
+    DIO -.-> HID
 ~~~
 
 The intended transformation is:
@@ -822,15 +822,15 @@ flowchart TB
 
     PHONE <-->|"Bootstrap"| BT
     PHONE <-->|"CarPlay network"| WIFI
-    BT --> IAP
-    WIFI --> MDNS
-    IAP --> DIO
-    MDNS --> DIO
-    DIO --> AIRPLAY
-    AIRPLAY --> CP
-    CP --> VIDEO
-    CP --> AUDIO
-    CP --> HID
+    BT -.-> IAP
+    WIFI -.-> MDNS
+    IAP -.-> DIO
+    MDNS -.-> DIO
+    DIO -.-> AIRPLAY
+    AIRPLAY -.-> CP
+    CP -.-> VIDEO
+    CP -.-> AUDIO
+    CP -.-> HID
 ~~~
 
 The desired implementation preserves the existing:
