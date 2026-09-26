@@ -25,10 +25,14 @@ The repository separates architecture, subsystem research, evidence, provenance 
 - [Glossary](glossary.md)
 - [SSH / Runtime Environment](ssh-environment.md)
 - [Function-Level Call Graphs](call-graphs/README.md)
+- [Execution / Data-Flow Traces](../traces/README.md)
+- [Documentation Source of Truth](source-of-truth.md)
 
 ## Retired
 
 - `wireless-capability-breakdown.md` — retired because its broad scope duplicated the subsystem and architecture documents. Its useful findings should be maintained at their authoritative subsystem location.
+
+The repository's authority hierarchy is defined in [Documentation Source of Truth](source-of-truth.md). Completed traces are the execution-level source; the evidence register records the accepted evidence behind conclusions; subsystem and architecture documents synthesize those lower layers.
 
 ## Evidence Discipline
 
