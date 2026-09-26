@@ -19,10 +19,32 @@ Recover where `MDNS_DIRECTLINK_IFACE=carplay0` is consumed and how the value rea
 | Device / socket / file boundary | `carplay0` is established as USB-derived network interface; downstream socket binding unresolved |
 | Protocol event | Bonjour/mDNS APIs are present; production CarPlay discovery path on the configured interface is not fully traced |
 | Runtime confirmation | Configuration value is established; consumer/runtime propagation is not |
-| Evidence IDs | E-003, E-004, E-008, E-009 |
+| Evidence IDs | E-003, E-004, E-008, E-009, E-017 |
 | Remaining uncertainty | Consumer process and actual interface binding |
 
 Recover where `MDNS_DIRECTLINK_IFACE=carplay0` is read and how its value reaches the mDNS/AirPlay network path.
+
+## Newly recovered binary trace
+
+In production `dio_manager`, configuration metadata contains:
+
+```text
+MDNS_DIRECTLINK_IFACE=carplay0
+```
+
+at virtual address `0x190d2c`, adjacent to other mDNS configuration metadata. This establishes the value as part of the binary's configuration data rather than an isolated architectural description.
+
+The consumer and propagation path are still not recovered. Therefore the trace remains:
+
+```text
+MDNS_DIRECTLINK_IFACE=carplay0
+        |
+        +--> [consumer: unresolved]
+                    |
+                    +--> [interface propagation: unresolved]
+                                |
+                                +--> [socket binding: unresolved]
+```
 
 ## Established
 
