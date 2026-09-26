@@ -384,6 +384,8 @@ How does the Bluetooth/iAP2 bootstrap become associated with the Wi-Fi/AirPlay s
 | **[Glossary](docs/glossary.md)** | Canonical project terminology |
 | **[SSH Environment](docs/ssh-environment.md)** | Runtime investigation environment |
 | **[Call Graphs](docs/call-graphs/README.md)** | Function-level execution-trace structure |
+| **[Execution Traces](traces/README.md)** | Transport-boundary execution/data-flow traces |
+| **[Source of Truth](docs/source-of-truth.md)** | Documentation authority hierarchy |
 | **[Documentation Index](docs/README.md)** | Complete documentation map |
 
 ---
@@ -419,5 +421,7 @@ This project involves reverse engineering and modifying automotive infotainment 
 Always retain original files, hashes and a reliable recovery path before experimenting with a vehicle.
 
 ---
+
+The documentation authority hierarchy is defined in [`docs/source-of-truth.md`](docs/source-of-truth.md). Execution traces in [`traces/`](traces/README.md) are the authoritative place for recovered call/data-flow edges; architectural diagrams may contain dashed target/inference edges and must not be read as proof.
 
 > **Trace it. Prove it. Document it.**
