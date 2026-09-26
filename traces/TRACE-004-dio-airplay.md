@@ -4,6 +4,8 @@
 
 ## Objective
 
+Recover the actual DIO → AirPlay session construction path and the interface/transport arguments supplied to the screen APIs.
+
 ## Trace Record
 
 | Field | Current state |
@@ -17,7 +19,7 @@
 | Device / socket / file boundary | Network interface/client MAC boundary unresolved |
 | Protocol event | AirPlay SETUP/session relationship is not yet correlated to the interface setters |
 | Runtime confirmation | Integration symbols are present; complete runtime call sequence is not |
-| Evidence IDs | E-009, E-010, E-013 |
+| Evidence IDs | E-009, E-010 |
 | Remaining uncertainty | Exact callers, arguments, timing and error handling |
 
 Recover the actual DIO-to-AirPlay session construction and interface/transport arguments.
@@ -65,7 +67,6 @@ The integration boundary is established, but the exact callers, arguments, timin
 
 - E-009 — AirPlay interface-selection helpers
 - E-010 — DIO AirPlay/CarPlay integration
-- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
