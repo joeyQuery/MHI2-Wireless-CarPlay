@@ -92,6 +92,10 @@ AirPlay / Bonjour
 
 Recover the consumer before changing the configuration.
 
+## Relationship to Execution Traces
+
+The call-graph directory defines the function-level record format. Completed transport-boundary traces are maintained in [`traces/`](../../traces/README.md). A call-graph target is not promoted to a trace edge until the caller/callee relationship is actually recovered.
+
 ## Evidence Standard
 
 A call graph is complete only when its important edges are supported by binary analysis, runtime evidence, protocol evidence, or a clearly labelled inference.
