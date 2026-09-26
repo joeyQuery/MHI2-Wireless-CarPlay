@@ -8,17 +8,23 @@ Permanent record of interpretations that investigation has eliminated, corrected
 
 **Status:** Eliminated.
 
+**Evidence:** E-012.
+
 ## 2. `111` is not an iAP2 Identify capability
 
 `altScreen` belongs to AirPlay feature negotiation, not iAP2 Identify.
 
 **Status:** Eliminated.
 
+**Evidence:** E-013.
+
 ## 3. `hci0` is not proven to be the production Bluetooth transport
 
 The image contains a lab/manufacturing HCI configuration involving `hci0`, `/dev/ttyS0`, TCP and `mlan0`. Production architecture uses the Marvell 8787 SDIO platform. The lab configuration cannot establish the production HCI transport.
 
 **Status:** Eliminated as a production assumption.
+
+**Evidence:** E-014.
 
 ## 4. `/dev/ttyS0` is not proven to be production Bluetooth HCI
 
@@ -32,17 +38,23 @@ The existence of `uap0` and AirPlay Wi-Fi-aware helpers does not prove that chan
 
 **Status:** Unproven; do not treat as a solved substitution.
 
+**Trace:** TRACE-003.
+
 ## 6. `MDNS_DIRECTLINK_IFACE=uap0` is not yet proven sufficient
 
 The production value `carplay0` is known, but the consumer and complete runtime socket/interface path have not been recovered.
 
 **Status:** Unproven.
 
+**Trace:** TRACE-003.
+
 ## 7. Presence of iAP2 binaries does not prove Wireless CarPlay iAP2 is enabled
 
 The image contains multiple iAP/iAP2 components, including a Bluetooth iAP proxy, but their presence alone does not establish a working Bluetooth CarPlay bootstrap.
 
 **Status:** Eliminated as an inference.
+
+**Evidence:** E-007.
 
 ## 8. Lab HCI evidence must not substitute for production HCI evidence
 
@@ -55,6 +67,8 @@ Manufacturing/lab configuration is useful evidence about available interfaces, b
 The existence of `IsWiFiNetworkInterface` and interface-selection functions establishes capability in the library, not the runtime argument values supplied by DIO.
 
 **Status:** Unproven; preserved as an open trace.
+
+**Trace:** TRACE-004 and TRACE-005.
 
 ## 10. Component presence does not prove runtime participation
 
