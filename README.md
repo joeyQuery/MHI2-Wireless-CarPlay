@@ -43,27 +43,32 @@ The focus is on **understanding the platform itself**, rather than replacing it 
 
 # Architecture
 
-```mermaid
+~~~mermaid
 flowchart LR
     PHONE["iPhone"]
 
     subgraph MHI2["Audi MHI2"]
         direction LR
         BT["Bluetooth / iAP2"]
-        WIFI["Wi-Fi"]
-        AIRPLAY["AirPlay"]
+        WIFI["Wi-Fi / uap0"]
+        MDNS["mDNS"]
+        DIO["dio_manager"]
+        AIRPLAY["libairplay"]
         CP["CarPlay"]
         MMI["MMI"]
     end
 
     PHONE <-->|"Bluetooth"| BT
     PHONE <-->|"Wi-Fi"| WIFI
-
-    BT --> CP
-    WIFI --> AIRPLAY
+    WIFI --> MDNS
+    BT --> DIO
+    MDNS --> DIO
+    DIO --> AIRPLAY
     AIRPLAY --> CP
     CP --> MMI
-```
+~~~
+
+The detailed integration map is in **[Wireless CarPlay Architecture](docs/wireless-carplay-architecture.md)**.
 
 ---
 
@@ -88,6 +93,7 @@ Unproven assumptions are explicitly identified rather than presented as fact.
 
 Detailed research is maintained in separate documents:
 
+- **[Wireless CarPlay Architecture](docs/wireless-carplay-architecture.md)** — end-to-end integration map, evidence status and trace objectives
 - **[Bluetooth](docs/bluetooth.md)** — Bluetooth architecture and behaviour
 - **[iAP2](docs/iap2.md)** — iAP/iAP2 architecture and transport
 - **[Wi-Fi](docs/wifi.md)** — MHI2 WLAN architecture
