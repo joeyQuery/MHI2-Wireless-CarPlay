@@ -75,10 +75,16 @@ See [Evidence](docs/evidence.md) for the authoritative evidence register and [Di
 - [Disproven](docs/disproven.md) — eliminated interpretations.
 - [SSH Environment](docs/ssh-environment.md) — runtime investigation environment.
 - [Call Graphs](docs/call-graphs/README.md) — function-level tracing structure.
+- [Execution Traces](traces/README.md) — transport-boundary trace artifacts.
+- [Source of Truth](docs/source-of-truth.md) — documentation authority hierarchy.
 
 ## Explicitly Retired
 
 `docs/wireless-capability-breakdown.md` was a broad aggregation that overlapped the subsystem documents. Its unique useful material should live in the appropriate subsystem/connectivity documentation rather than maintaining a second architecture source.
+
+## Trace State
+
+The repository now has explicit trace artifacts for the six highest-value transport boundaries. TRACE-001 through TRACE-005 are partial because the critical function/argument/runtime edges are not yet recovered; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated. These documents must not be read as proof of the missing edges.
 
 ## Immediate Research State
 
