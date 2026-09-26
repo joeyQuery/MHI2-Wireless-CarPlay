@@ -92,7 +92,7 @@ stock vs modified state
 relationship between dump and runtime unit
 ```
 
-If a field is unknown, write `UNKNOWN` rather than leaving provenance ambiguous.
+If a field is unknown, write `UNKNOWN` rather than leaving provenance ambiguous. Do not infer an exact firmware build from a MU0678-class family label.
 
 ## Firmware Evidence Rule
 
