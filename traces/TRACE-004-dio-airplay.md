@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | DIO AirPlay receiver/session integration |
+| Process / binary | `dio_manager`; `libairplay.so` |
+| Caller / callee | AirPlay receiver/session symbols are established; exact caller/callee sequence unresolved |
+| Arguments | `SetIFName`, `SetTransportType`, `SetClientIfMACAddr` values unresolved |
+| Return / error behaviour | Unresolved |
+| IPC / ASI / DSI boundary | Unresolved |
+| Device / socket / file boundary | Network interface/client MAC boundary unresolved |
+| Protocol event | AirPlay SETUP/session relationship is not yet correlated to the interface setters |
+| Runtime confirmation | Integration symbols are present; complete runtime call sequence is not |
+| Evidence IDs | E-009, E-010, E-013 |
+| Remaining uncertainty | Exact callers, arguments, timing and error handling |
+
 Recover the actual DIO-to-AirPlay session construction and interface/transport arguments.
 
 ## Established
