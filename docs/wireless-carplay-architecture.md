@@ -729,7 +729,7 @@ The implementation goal is to reach this existing session machinery through wire
 
 # 5. Evidence Status
 
-## 4.1 Established
+## 5.1 Established
 
 | Finding | Status |
 |---|---|
@@ -754,7 +754,7 @@ The implementation goal is to reach this existing session machinery through wire
 | DIO iAP2 connection symbols | **Proven** |
 | Bluetooth/WLAN coexistence configuration | **Proven** |
 
-## 4.2 Runtime evidence
+## 5.2 Runtime evidence
 
 The research establishes runtime evidence for:
 
@@ -766,7 +766,7 @@ The research establishes runtime evidence for:
 
 Static evidence and runtime observations should remain separately labelled.
 
-## 4.3 Not yet proven
+## 5.3 Not yet proven
 
 Do **not** document these as working capabilities yet:
 
@@ -780,7 +780,7 @@ DIO already contains a complete Wireless CarPlay path
 A stock iPhone can complete Wireless CarPlay against the modified path
 ~~~
 
-## 4.4 Evidence classes
+## 5.4 Evidence classes
 
 Every new finding should be tagged as one of:
 
@@ -794,7 +794,7 @@ Every new finding should be tagged as one of:
 
 # 6. End State / Trace Objective
 
-## 5.1 Final target
+## 6.1 Final target
 
 ~~~mermaid
 flowchart TB
@@ -858,7 +858,7 @@ carplay0
 MDNS_DIRECTLINK_IFACE=carplay0
 ~~~
 
-## 5.2 Trace completion criteria
+## 6.2 Trace completion criteria
 
 ~~~mermaid
 flowchart LR
@@ -907,7 +907,7 @@ Recovery:
     disconnect / reconnect transitions
 ~~~
 
-## 5.3 Final integration boundary
+## 6.3 Final integration boundary
 
 ~~~mermaid
 flowchart TB
