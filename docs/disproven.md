@@ -2,37 +2,21 @@
 
 Permanent record of interpretations that investigation has eliminated, corrected or shown unsafe to assume. This prevents repeated dead-end investigations.
 
-## 1. AirPlay stream type 111 is not the display description
-
-`111` is the AirPlay stream type used to request the alternate/secondary stream. Descriptive display information is carried elsewhere in the AirPlay `/info` / SETUP negotiation context.
-
-**Status:** Eliminated.
-
-**Evidence:** E-012.
-
-## 2. `111` is not an iAP2 Identify capability
-
-`altScreen` belongs to AirPlay feature negotiation, not iAP2 Identify.
-
-**Status:** Eliminated.
-
-**Evidence:** E-013.
-
-## 3. `hci0` is not proven to be the production Bluetooth transport
+## 1. `hci0` is not proven to be the production Bluetooth transport
 
 The image contains a lab/manufacturing HCI configuration involving `hci0`, `/dev/ttyS0`, TCP and `mlan0`. Production architecture uses the Marvell 8787 SDIO platform. The lab configuration cannot establish the production HCI transport.
 
 **Status:** Eliminated as a production assumption.
 
-**Evidence:** E-014.
+**Evidence:** E-012.
 
-## 4. `/dev/ttyS0` is not proven to be production Bluetooth HCI
+## 2. `\/dev\/ttyS0` is not proven to be production Bluetooth HCI
 
 Same production/lab evidence boundary as `hci0`.
 
 **Status:** Eliminated as a production assumption.
 
-## 5. `uap0` is not yet proven to replace `carplay0`
+## 3. `uap0` is not yet proven to replace `carplay0`
 
 The existence of `uap0` and AirPlay Wi-Fi-aware helpers does not prove that changing the CarPlay network interface from `carplay0` to `uap0` is sufficient.
 
@@ -40,7 +24,7 @@ The existence of `uap0` and AirPlay Wi-Fi-aware helpers does not prove that chan
 
 **Trace:** TRACE-003.
 
-## 6. `MDNS_DIRECTLINK_IFACE=uap0` is not yet proven sufficient
+## 4. `MDNS_DIRECTLINK_IFACE=uap0` is not yet proven sufficient
 
 The production value `carplay0` is known, but the consumer and complete runtime socket/interface path have not been recovered.
 
@@ -48,7 +32,7 @@ The production value `carplay0` is known, but the consumer and complete runtime 
 
 **Trace:** TRACE-003.
 
-## 7. Presence of iAP2 binaries does not prove Wireless CarPlay iAP2 is enabled
+## 5. Presence of iAP2 binaries does not prove Wireless CarPlay iAP2 is enabled
 
 The image contains multiple iAP/iAP2 components, including a Bluetooth iAP proxy, but their presence alone does not establish a working Bluetooth CarPlay bootstrap.
 
@@ -56,13 +40,13 @@ The image contains multiple iAP/iAP2 components, including a Bluetooth iAP proxy
 
 **Evidence:** E-007.
 
-## 8. Lab HCI evidence must not substitute for production HCI evidence
+## 6. Lab HCI evidence must not substitute for production HCI evidence
 
 Manufacturing/lab configuration is useful evidence about available interfaces, but it cannot establish the production HCI device or transport without a production-specific trace.
 
 **Status:** Methodological limitation established.
 
-## 9. AirPlay Wi-Fi helper presence does not prove MHI2 invokes AirPlay on `uap0`
+## 7. AirPlay Wi-Fi helper presence does not prove MHI2 invokes AirPlay on `uap0`
 
 The existence of `IsWiFiNetworkInterface` and interface-selection functions establishes capability in the library, not the runtime argument values supplied by DIO.
 
@@ -70,7 +54,7 @@ The existence of `IsWiFiNetworkInterface` and interface-selection functions esta
 
 **Trace:** TRACE-004 and TRACE-005.
 
-## 10. Component presence does not prove runtime participation
+## 8. Component presence does not prove runtime participation
 
 A binary, library, configuration key or symbol being present establishes availability in the image, not participation in a specific production path.
 
