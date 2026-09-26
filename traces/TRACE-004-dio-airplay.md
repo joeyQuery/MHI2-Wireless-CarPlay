@@ -65,7 +65,7 @@ The integration boundary is established, but the exact callers, arguments, timin
 
 - E-009 — AirPlay interface-selection helpers
 - E-010 — DIO AirPlay/CarPlay integration
-- E-015 — Wireless CarPlay is not yet proven end-to-end
+- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
