@@ -12,17 +12,34 @@ Connect AirPlay interface-selection APIs to the actual socket/network interface 
 |---|---|
 | Entry point | AirPlay network/interface setup |
 | Process / binary | `libairplay.so` |
-| Caller / callee | Interface-selection APIs and socket helper APIs are identified; internal propagation is unresolved |
+| Caller / callee | Real packet/multicast interface helpers are identified; exported screen setters and `SocketSetBoundInterface` are stubs in production |
 | Arguments | Unresolved |
 | Return / error behaviour | Unresolved |
 | IPC / ASI / DSI boundary | Unresolved |
 | Device / socket / file boundary | Socket/interface boundary is the target; actual production interface unresolved |
 | Protocol event | Bonjour/AirPlay networking APIs are present; production socket path not fully correlated |
 | Runtime confirmation | No complete runtime proof of the selected interface is committed |
-| Evidence IDs | E-008, E-009 |
-| Remaining uncertainty | Setter implementation, interface comparisons and actual socket binding |
+| Evidence IDs | E-008, E-009, E-018, E-019, E-020 |
+| Remaining uncertainty | Actual callers, interface comparisons, packet/multicast binding path and selected runtime interface |
 
 Connect the AirPlay interface-selection API surface to the actual socket/network interface used by the receiver.
+
+## Newly recovered binary trace
+
+The pristine production `libairplay.so` separates the apparent interface API surface from the lower-level helpers:
+
+- `AirPlayReceiverSessionScreen_SetIFName` — no-op stub.
+- `AirPlayReceiverSessionScreen_SetTransportType` — no-op stub.
+- `AirPlayReceiverSessionScreen_SetClientIfMACAddr` — no-op stub.
+- `SocketSetBoundInterface` — tiny stub/constant-return.
+- `SocketSetPacketReceiveInterface` — substantive implementation.
+- `SocketSetMulticastInterface` — substantive implementation.
+- `IsWiFiNetworkInterface` — substantive implementation.
+- `IsUSBNetworkInterface` — constant-return helper.
+
+Bonjour/mDNS support remains present, including `DNSServiceRegister`, `DNSServiceUpdateRecord`, `DNSServiceGetAddrInfo`, `DNSServiceQueryRecord`, and `_airplay._tcp.`.
+
+Therefore the production AirPlay network trace must be followed through the real packet/multicast/interface helpers rather than assuming the screen setters or `SocketSetBoundInterface` perform the binding.
 
 ## Established
 
