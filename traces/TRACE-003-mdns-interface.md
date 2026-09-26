@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | `MDNS_DIRECTLINK_IFACE` configuration |
+| Process / binary | Configuration consumer not yet identified; relevant AirPlay/mDNS components are known |
+| Caller / callee | Configuration key → consumer → interface propagation → socket binding remains unresolved |
+| Arguments | Interface value is `carplay0` in production configuration; downstream arguments unresolved |
+| Return / error behaviour | Unresolved |
+| IPC / ASI / DSI boundary | Unresolved |
+| Device / socket / file boundary | `carplay0` is established as USB-derived network interface; downstream socket binding unresolved |
+| Protocol event | Bonjour/mDNS APIs are present; production CarPlay discovery path on the configured interface is not fully traced |
+| Runtime confirmation | Configuration value is established; consumer/runtime propagation is not |
+| Evidence IDs | E-003, E-004, E-008, E-009 |
+| Remaining uncertainty | Consumer process and actual interface binding |
+
 Recover where `MDNS_DIRECTLINK_IFACE=carplay0` is read and how its value reaches the mDNS/AirPlay network path.
 
 ## Established
