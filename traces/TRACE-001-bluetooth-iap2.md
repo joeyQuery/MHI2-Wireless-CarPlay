@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | Bluetooth CarPlay/iAP bootstrap entry; exact function not recovered |
+| Process / binary | `bluetooth`; `btstack`; `libasimmxconnectivity_bluetooth_iapproxy.so`; iAP2 components |
+| Caller / callee | Bluetooth-side iAP registration/proxy relationship is established at component level; exact caller/callee chain unresolved |
+| Arguments | Unresolved |
+| Return / error behaviour | Unresolved |
+| IPC / ASI / DSI boundary | Unresolved |
+| Device / socket / file boundary | Transport/device boundary unresolved |
+| Protocol event | Bluetooth/iAP2 protocol transition not yet captured as one production trace |
+| Runtime confirmation | Component/runtime observations exist, but no complete timestamped Bluetooth→iAP2 execution trace is committed |
+| Evidence IDs | E-006, E-007, E-013 |
+| Remaining uncertainty | `enableIap` control flow, transport creation and DIO handoff |
+
 Recover the production path from MHI2 Bluetooth handling into iAP/iAP2 for the CarPlay bootstrap.
 
 ## Established
