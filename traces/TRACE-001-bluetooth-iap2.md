@@ -61,7 +61,7 @@ The existence of these components is proven; the arrows after the component boun
 
 - E-006 — production `enableIap=false`
 - E-007 — Bluetooth-side iAP proxy exists
-- E-015 — Wireless CarPlay is not yet proven end-to-end
+- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
