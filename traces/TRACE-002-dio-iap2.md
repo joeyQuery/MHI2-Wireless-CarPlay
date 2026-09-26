@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | DIO iAP2 integration surface (`iAP2Connect` / `CIpodAP2Service`) |
+| Process / binary | `dio_manager` plus iAP2 components |
+| Caller / callee | `notifyiAP2DeviceConnected` / `iAP2Connect` / `CIpodAP2Service` are identified; exact device-open/use sequence unresolved |
+| Arguments | Unresolved |
+| Return / error behaviour | Unresolved |
+| IPC / ASI / DSI boundary | Unresolved |
+| Device / socket / file boundary | Production `/dev/ipod0` is established; exact open/use ownership unresolved |
+| Protocol event | iAP2 event boundary not fully recovered |
+| Runtime confirmation | Production `/dev/ipod0` use is established; complete DIO→transport runtime path is not |
+| Evidence IDs | E-005, E-010, E-013 |
+| Remaining uncertainty | Transport abstraction versus intrinsic USB dependency |
+
 Determine whether DIO's iAP2 service is intrinsically tied to the USB `/dev/ipod0` device or consumes a transport abstraction.
 
 ## Established
