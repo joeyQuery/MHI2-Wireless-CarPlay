@@ -4,6 +4,8 @@
 
 ## Objective
 
+Connect AirPlay interface-selection APIs to the actual socket/network interface used by the receiver.
+
 ## Trace Record
 
 | Field | Current state |
