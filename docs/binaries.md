@@ -99,7 +99,7 @@ These are part of the broader connectivity architecture. Their presence does not
 
 ## Inventory Discipline
 
-For every newly analysed binary, record:
+For every newly analysed binary, record the following metadata before promoting it into an execution trace:
 
 1. exact path;
 2. firmware/source baseline;
@@ -111,4 +111,4 @@ For every newly analysed binary, record:
 8. current evidence classification;
 9. unresolved questions.
 
-Do not promote a component from “present” to “used by Wireless CarPlay” without a traceable relationship.
+Do not promote a component from “present” to “used by Wireless CarPlay” without a traceable relationship. Until exact path/hash provenance is recorded, treat binary identity as provisional and keep the corresponding execution claim at Partial or Unproven.
