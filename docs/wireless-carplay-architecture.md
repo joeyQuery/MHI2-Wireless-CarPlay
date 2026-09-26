@@ -8,6 +8,10 @@ Evidence-driven integration map for Wireless CarPlay on Audi MHI2 / MU0678-class
 
 ---
 
+## Edge notation
+
+Architecture diagrams use **solid arrows for established relationships** and **dashed arrows for target, inferred or unresolved relationships**. A dashed arrow is never evidence of a completed production path. Recovered execution/data-flow traces live in [`traces/`](../traces/README.md).
+
 # 1. Current Mapped Architecture
 
 ## 1.1 System-level architecture
@@ -362,7 +366,21 @@ Every untraced arrow remains an investigation target.
 
 ---
 
-# 3. Component / Subsystem Breakdown
+# 3. Trace Artifacts
+
+The current transport-boundary trace set is:
+
+- [TRACE-001 — Bluetooth → iAP2](../traces/TRACE-001-bluetooth-iap2.md)
+- [TRACE-002 — DIO → iAP2](../traces/TRACE-002-dio-iap2.md)
+- [TRACE-003 — MDNS_DIRECTLINK_IFACE](../traces/TRACE-003-mdns-interface.md)
+- [TRACE-004 — DIO → AirPlay](../traces/TRACE-004-dio-airplay.md)
+- [TRACE-005 — AirPlay network binding](../traces/TRACE-005-airplay-network.md)
+- [TRACE-006 — session correlation](../traces/TRACE-006-session-correlation.md)
+
+All six are intentionally marked Partial or Target. None claims the unresolved wireless path is implemented.
+
+# 4. Component / Subsystem Breakdown
+# 4. Component / Subsystem Breakdown
 
 ## 3.1 Marvell 8787 / SDIO
 
@@ -710,7 +728,7 @@ The implementation goal is to reach this existing session machinery through wire
 
 ---
 
-# 4. Evidence Status
+# 5. Evidence Status
 
 ## 4.1 Established
 
@@ -775,7 +793,7 @@ Every new finding should be tagged as one of:
 
 ---
 
-# 5. End State / Trace Objective
+# 6. End State / Trace Objective
 
 ## 5.1 Final target
 
@@ -932,7 +950,7 @@ The critical reverse-engineering questions are:
 
 ---
 
-# 6. Binary Reference Map
+# 7. Binary Reference Map
 
 | Layer | Binary / component | Role |
 |---|---|---|
@@ -954,7 +972,7 @@ The critical reverse-engineering questions are:
 
 ---
 
-# 7. Immediate Reverse-Engineering Targets
+# 8. Immediate Reverse-Engineering Targets
 
 ## Target A — `enableIap`
 
@@ -1037,7 +1055,7 @@ into one timestamped session trace.
 
 ---
 
-# 8. Architectural Conclusion
+# 9. Architectural Conclusion
 
 The evidence currently supports this model:
 
