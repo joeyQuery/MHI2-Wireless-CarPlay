@@ -8,9 +8,9 @@ Evidence-based reverse engineering of the Bluetooth subsystem in Audi MHI2 / MU0
 
 ---
 
-# Architecture Overview
+# 1. Current Mapped Architecture
 
-The MHI2 Bluetooth implementation is distributed across several distinct layers:
+This is the Bluetooth architecture currently established from the MHI2 production image.
 
 ```mermaid
 flowchart TB
@@ -78,11 +78,11 @@ flowchart TB
     MARVELL --> FW
 ```
 
-The exact implementation of several internal boundaries is still being traced. The diagram therefore represents the current architectural model rather than claiming that every arrow corresponds to a directly established function call.
+The architecture above is the current conceptual map. Not every arrow represents a directly established function call; several internal boundaries remain to be traced.
 
 ---
 
-# 1. Process Architecture
+## 1.1 Process Architecture
 
 The production connectivity configuration launches separate processes for the major connectivity services.
 
@@ -109,9 +109,7 @@ flowchart TB
     LAUNCHER --> NAD
 ```
 
-`bluetooth` and `btstack` are distinct executables rather than two names for the same component.
-
-The production paths are:
+`bluetooth` and `btstack` are distinct executables:
 
 ```text
 /eso/bin/apps/bluetooth
@@ -124,7 +122,7 @@ The production paths are:
 /tmp/mvloaded
 ```
 
-This means the Bluetooth protocol stack does not initialise until the Marvell wireless firmware-loading stage has produced `/tmp/mvloaded`.
+Therefore:
 
 ```mermaid
 flowchart LR
@@ -138,35 +136,62 @@ flowchart LR
 
 ---
 
-# 2. Connectivity Supervisor and Recovery
+## 1.2 Shared Wireless Hardware
 
-Bluetooth lifecycle management is tied into `connectivity_launcher`.
-
-The production configuration defines a Bluetooth failure path involving `btstack` shutdown and `reset_bt.sh`.
+Bluetooth and WLAN share the Marvell 8787 controller.
 
 ```mermaid
 flowchart TB
-    FAILURE["Bluetooth / btstack failure"]
-    SHUTDOWN["btstack shutdown"]
-    RESET["/eso/bin/reset_bt.sh"]
-    INIT["btstack init"]
-    RUN["btstack run"]
+    MHI2["MHI2"]
 
-    FAILURE --> SHUTDOWN
-    SHUTDOWN --> RESET
-    RESET --> INIT
-    INIT --> RUN
+    SDIORM["io-sdiorm-mib2"]
+    SDIO["SDIO"]
+    MARVELL["Marvell 8787"]
+
+    WLAN["WLAN"]
+    BT["Bluetooth"]
+
+    FW["WLAN / BT Firmware"]
+
+    MHI2 --> SDIORM
+    SDIORM --> SDIO
+    SDIO --> MARVELL
+
+    MARVELL --> WLAN
+    MARVELL --> BT
+    MARVELL --> FW
 ```
 
-`btstack` itself also has `reset_bt.sh` as an `onFailure` action.
+Firmware includes:
 
-There is also an `onLeaveCustomerUpdate` action using the same reset script.
+```text
+sd8787_uapsta.bin
+w8787_wlan_SDIO_bt_SDIO.bin
+```
 
-This establishes the reset script as part of the production Bluetooth recovery architecture.
+The wireless startup path currently established is:
+
+```mermaid
+flowchart LR
+    START["Wireless subsystem startup"]
+    SDIO["io-sdiorm-mib2"]
+    DEV["/dev/sdio0"]
+    MVLOAD["mvload"]
+    FW["Marvell firmware"]
+    MARKER["/tmp/mvloaded"]
+    BTSTACK["btstack"]
+
+    START --> SDIO
+    SDIO --> DEV
+    DEV --> MVLOAD
+    MVLOAD --> FW
+    FW --> MARKER
+    MARKER --> BTSTACK
+```
 
 ---
 
-# 3. High-Level Bluetooth Service
+## 1.3 Bluetooth Service Boundary
 
 The high-level Bluetooth executable is:
 
@@ -174,7 +199,7 @@ The high-level Bluetooth executable is:
 /eso/bin/apps/bluetooth
 ```
 
-The production Bluetooth configuration contains:
+Production configuration contains:
 
 ```json
 {
@@ -183,17 +208,9 @@ The production Bluetooth configuration contains:
 }
 ```
 
-## Topology Logic
+The meaning of `topologyLogic=1` has not yet been established through binary analysis.
 
-The configuration contains an explicit Bluetooth topology-management mode.
-
-The meaning of numeric value `1` has **not** yet been established through binary analysis.
-
-It should therefore not be assigned a meaning without tracing the Bluetooth executable.
-
-## iAP
-
-Production configuration explicitly specifies:
+The production configuration explicitly sets:
 
 ```text
 enableIap = false
@@ -203,13 +220,13 @@ This establishes that Bluetooth-side iAP functionality is disabled in this confi
 
 It does **not** establish that iAP/iAP2 support is absent from the firmware.
 
-The image contains dedicated iAP infrastructure, including:
+The image contains dedicated iAP infrastructure:
 
 ```text
 libasimmxconnectivity_bluetooth_iapproxy.so
 ```
 
-The distinction is therefore:
+The currently mapped relationship is:
 
 ```mermaid
 flowchart LR
@@ -223,33 +240,29 @@ flowchart LR
     PROXY --> IAP2
 ```
 
-The exact code path controlled by `enableIap` remains to be determined.
+The exact code path controlled by `enableIap` remains unresolved.
 
 ---
 
-# 4. Bluetooth Service Interfaces
+## 1.4 Bluetooth Service Interfaces
 
-The image contains a dedicated DSI Bluetooth proxy:
+The image contains:
 
 ```text
 libdsibluetoothproxy.so
 ```
 
-The trace configuration also exposes:
+Trace configuration exposes:
 
 ```text
 PROXY_dsi_bluetooth_DSIBluetooth
 STUB_dsi_bluetooth_DSIBluetooth
-```
 
-There is a corresponding OBEX authentication interface:
-
-```text
 PROXY_dsi_bluetooth_DSIObexAuthentication
 STUB_dsi_bluetooth_DSIObexAuthentication
 ```
 
-The connectivity side contains:
+Connectivity-side proxies include:
 
 ```text
 libasimmxconnectivity_bluetoothproxy.so
@@ -257,7 +270,7 @@ libasimmxconnectivity_bluetooth_a2dpproxy.so
 libasimmxconnectivity_bluetooth_iapproxy.so
 ```
 
-The currently established interface structure can therefore be represented as:
+Current interface structure:
 
 ```mermaid
 flowchart TB
@@ -279,83 +292,15 @@ flowchart TB
     BT --> OBEX
 ```
 
-The exact ownership and method-level call graph remains to be established through binary/runtime tracing.
+The exact ownership and method-level call graph remains unresolved.
 
 ---
 
-# 5. HMI Bluetooth Architecture
-
-The HMI contains separate Bluetooth components:
-
-```text
-hmi_App_Bluetooth_Main
-hmi_App_Bluetooth_DSI
-hmi_App_Bluetooth_HMI
-hmi_App_Bluetooth_Models
-hmi_App_Bluetooth_OSGI
-hmi_App_Bluetooth_Storage
-```
-
-There is also a separate OBEX HMI layer:
-
-```text
-hmi_App_Obex_Main
-hmi_App_Obex_DSI
-hmi_App_Obex_HMI
-```
-
-The HMI architecture can therefore be represented as:
-
-```mermaid
-flowchart TB
-    HMI["MMI / HMI"]
-
-    subgraph BLUETOOTH_HMI["Bluetooth HMI"]
-        MAIN["Main"]
-        DSI["DSI"]
-        UI["HMI"]
-        MODELS["Models"]
-        OSGI["OSGi"]
-        STORAGE["Storage"]
-    end
-
-    subgraph OBEX_HMI["OBEX HMI"]
-        OBEX_MAIN["Main"]
-        OBEX_DSI["DSI"]
-        OBEX_UI["HMI"]
-    end
-
-    HMI --> MAIN
-    HMI --> DSI
-    HMI --> UI
-    HMI --> MODELS
-    HMI --> OSGI
-    HMI --> STORAGE
-
-    HMI --> OBEX_MAIN
-    HMI --> OBEX_DSI
-    HMI --> OBEX_UI
-```
-
-This demonstrates that Bluetooth presentation, models, storage and service communication are separated rather than being one monolithic UI component.
-
----
-
-# 6. Telephone Integration
+## 1.5 Telephone Integration
 
 `telephone` is a separate service from both `bluetooth` and `btstack`.
 
-The telephone subsystem exposes:
-
-```text
-CON_CALLHANDLINGSERVICES
-CON_HANDSFREESERVICES
-CON_NADSERVICES
-CON_PHONEPOWERSERVICES
-CON_TEL
-```
-
-Most importantly, the image contains:
+The image contains:
 
 ```text
 TelephoneBluetoothBridge
@@ -368,7 +313,7 @@ PROXY_asi_connectivity_telephone_TelephoneBluetoothBridge
 STUB_asi_connectivity_telephone_TelephoneBluetoothBridge
 ```
 
-The architecture is therefore:
+Current relationship:
 
 ```mermaid
 flowchart LR
@@ -390,13 +335,13 @@ flowchart LR
     BRIDGE --> BT
 ```
 
-This is direct evidence that `telephone` is an application/service layer interacting with Bluetooth rather than being the Bluetooth protocol stack itself.
+This establishes `telephone` as an application/service layer interacting with Bluetooth rather than being the Bluetooth protocol stack itself.
 
 ---
 
-# 7. Bluetooth Protocol Stack
+## 1.6 Bluetooth Protocol Stack
 
-The production `btstack` configuration contains:
+Production `btstack` configuration contains:
 
 ```text
 hciStartupCapture = true
@@ -415,7 +360,7 @@ AudioStreamPriority = 17
 getA2dpDataFromHciTransport = true
 ```
 
-The currently established protocol-layer model is:
+Current protocol-layer model:
 
 ```mermaid
 flowchart TB
@@ -437,39 +382,34 @@ flowchart TB
     PROFILES --> PBAP["PBAP"]
 ```
 
-The diagram deliberately stops at the protocol layer because the exact implementation boundaries beneath `btstack` are still being traced.
+The diagram deliberately stops at the protocol layer because the exact implementation boundaries beneath `btstack` remain under investigation.
 
-MHI2's `btstack` executable should **not** be equated with the generic QNX `io-bluetooth` architecture without binary evidence proving that equivalence.
+The MHI2 `btstack` executable should **not** be equated with the generic QNX `io-bluetooth` architecture without binary evidence proving that equivalence.
 
 ---
 
-# 8. HCI Capture
+## 1.7 HCI Capture
 
-HCI capture is explicitly enabled in production:
+HCI capture is explicitly enabled:
 
 ```text
 hciStartupCapture = true
-```
-
-and:
-
-```text
 hciCaptureMaskedL2capChannels = false
 ```
 
-The trace configuration contains:
+Trace configuration contains:
 
 ```text
 CON_BTSTACK_HCICAPTURE
 ```
 
-and provides:
+and:
 
 ```text
 enableHciCapturing
 ```
 
-There are also separate Bluetooth tracing channels:
+Additional Bluetooth tracing channels are:
 
 ```text
 CON_BTSTACK
@@ -478,7 +418,7 @@ CON_BTSTACK_IA_SAP
 CON_BTSTACK_HCICAPTURE
 ```
 
-The diagnostic layers are therefore:
+Current diagnostic architecture:
 
 ```mermaid
 flowchart TB
@@ -499,9 +439,9 @@ This is one of the highest-value existing tracing facilities for further reverse
 
 ---
 
-# 9. iAP / iAP2
+## 1.8 iAP / iAP2 Infrastructure
 
-The firmware contains a substantial iAP/iAP2 implementation:
+The firmware contains:
 
 ```text
 /eso/bin/apps/iap
@@ -518,13 +458,13 @@ libiap2client.so
 iap2cli
 ```
 
-The production Bluetooth service nevertheless specifies:
+At the same time:
 
 ```text
 enableIap = false
 ```
 
-The current architecture is therefore:
+The discovered component relationship is:
 
 ```mermaid
 flowchart TB
@@ -545,15 +485,11 @@ flowchart TB
     IAP2 --> NCM
 ```
 
-This diagram describes the discovered component relationship, not a claim that every connection shown has been confirmed at runtime.
-
-The key unresolved question is:
-
-> **What exact code path does `enableIap` gate?**
+This describes the discovered component relationship, not a claim that every connection shown has been confirmed at runtime.
 
 ---
 
-# 10. A2DP and AVRCP
+## 1.9 A2DP / AVRCP
 
 Production explicitly enables AAC and disables MP3:
 
@@ -562,13 +498,13 @@ a2dpEndpointMp3Enabled = false
 a2dpEndpointAacEnabled = true
 ```
 
-A2DP data is configured to come from the HCI transport:
+A2DP data is configured to come from HCI transport:
 
 ```text
 getA2dpDataFromHciTransport = true
 ```
 
-The known portion of the path is:
+Known portion of the A2DP path:
 
 ```mermaid
 flowchart LR
@@ -584,9 +520,9 @@ flowchart LR
     A2DP -.-> AUDIO
 ```
 
-The final A2DP audio handoff remains to be traced.
+The final A2DP audio handoff remains unresolved.
 
-AVRCP has a separate configuration:
+AVRCP has separate configuration:
 
 ```text
 AudioStreamPriority = 17
@@ -609,7 +545,7 @@ A2DP and AVRCP should not be treated as one generic Bluetooth-audio path.
 
 ---
 
-# 11. HFP / Telephone Audio
+## 1.10 HFP / Telephone Audio
 
 Production configuration contains:
 
@@ -617,7 +553,7 @@ Production configuration contains:
 wbsSupported = true
 ```
 
-The image contains four HFP speech-processing resources:
+The image contains:
 
 ```text
 HFP_1_NB.bsd
@@ -633,7 +569,7 @@ NB = narrowband
 WB = wideband
 ```
 
-The established architecture is:
+Current architecture:
 
 ```mermaid
 flowchart LR
@@ -649,28 +585,28 @@ flowchart LR
     TEL --> AUDIO
 ```
 
-The exact selection and consumption of the four HFP resources remains to be traced.
+The exact selection and consumption of the four HFP resources remains unresolved.
 
 No assumption is made about which runtime device or call corresponds to HFP `1` or `2`.
 
 ---
 
-# 12. MAP, PBAP and OBEX
+## 1.11 MAP / PBAP / OBEX
 
-Production configuration contains:
+Production contains:
 
 ```text
 smsOnly = false
 ```
 
-The telephone trace configuration contains:
+Telephone trace configuration contains:
 
 ```text
 PROXY_asi_connectivity_phonebook
 STUB_asi_connectivity_phonebook
 ```
 
-The system also contains explicit OBEX interfaces:
+Explicit OBEX interfaces include:
 
 ```text
 DSIObexAuthentication
@@ -679,7 +615,7 @@ hmi_App_Obex_DSI
 hmi_App_Obex_HMI
 ```
 
-The architecture can therefore be represented as:
+Current architecture:
 
 ```mermaid
 flowchart TB
@@ -707,113 +643,9 @@ The exact profile → OBEX → application call graph and storage backend remain
 
 ---
 
-# 13. SPP
+## 1.12 Shared Bluetooth / WLAN Recovery
 
-SPP is **not currently proven as an active production capability** for this MHI2 configuration.
-
-Generic QNX platform documentation may describe SPP support, but that is not sufficient evidence for this specific production image.
-
-Therefore:
-
-```mermaid
-flowchart LR
-    SPP["SPP"]
-
-    STATUS["Not yet proven\nfor production MHI2"]
-
-    SPP -.-> STATUS
-```
-
-SPP should remain outside the confirmed production architecture until MHI2-specific evidence is found.
-
----
-
-# 14. Shared Marvell 8787 Controller
-
-Bluetooth and WLAN share the Marvell 8787 wireless hardware.
-
-The firmware contains:
-
-```text
-sd8787_uapsta.bin
-w8787_wlan_SDIO_bt_SDIO.bin
-```
-
-The wireless startup mechanism uses:
-
-```text
-io-sdiorm-mib2
-mvload
-```
-
-`btstack` waits for:
-
-```text
-/tmp/mvloaded
-```
-
-before initialising.
-
-The hardware architecture is:
-
-```mermaid
-flowchart TB
-    MHI2["MHI2"]
-
-    SDIORM["io-sdiorm-mib2"]
-    SDIO["SDIO"]
-
-    MARVELL["Marvell 8787"]
-
-    WLAN["WLAN"]
-    BT["Bluetooth"]
-
-    FW["WLAN / BT Firmware"]
-
-    MHI2 --> SDIORM
-    SDIORM --> SDIO
-    SDIO --> MARVELL
-
-    MARVELL --> WLAN
-    MARVELL --> BT
-    MARVELL --> FW
-```
-
-The exact host-side HCI transport implementation is not yet proven.
-
----
-
-# 15. Bluetooth Controller Startup
-
-The known startup relationship is:
-
-```mermaid
-flowchart LR
-    START["Wireless subsystem startup"]
-    SDIO["io-sdiorm-mib2"]
-    DEV["/dev/sdio0"]
-    MVLOAD["mvload"]
-    FW["Marvell firmware"]
-    MARKER["/tmp/mvloaded"]
-    BTSTACK["btstack"]
-
-    START --> SDIO
-    SDIO --> DEV
-    DEV --> MVLOAD
-    MVLOAD --> FW
-    FW --> MARKER
-    MARKER --> BTSTACK
-```
-
-The exact ordering of individual firmware and driver operations should be validated against runtime logs where possible.
-
----
-
-# 16. Bluetooth Reset / Recovery
-
-`reset_bt.sh` is not simply a Bluetooth daemon restart.
-
-It tears down the shared WLAN/BT infrastructure before restarting the SDIO subsystem and reloading firmware.
+`reset_bt.sh` tears down shared WLAN/BT infrastructure before restarting the SDIO subsystem and reloading firmware.
 
 ```mermaid
 flowchart TB
@@ -852,130 +684,13 @@ A Bluetooth failure can therefore cause the shared wireless controller infrastru
 
 ---
 
-# 17. Lab HCI Interface
+# 2. What Remains to Be Traced
 
-The image also contains a manufacturing/lab bridge configuration referencing:
-
-```text
-hci0
-/dev/ttyS0
-115200
-TCP
-mlan0
-```
-
-This is useful as development/manufacturing evidence, but it is **not production transport evidence**.
-
-The lab configuration also references different firmware infrastructure, including:
-
-```text
-mrvl/usb8782.bin
-```
-
-The production architecture instead uses the 8787 SDIO firmware path.
-
-Therefore:
-
-```mermaid
-flowchart LR
-    LAB["Lab / Manufacturing"]
-    HCI["hci0"]
-    UART["/dev/ttyS0"]
-    WLAN["mlan0"]
-
-    LAB --> HCI
-    HCI --> UART
-    LAB --> WLAN
-
-    PROD["Production"]
-    PROD -.->|"separate architecture"| LAB
-```
-
-Do not use the lab configuration to claim that production MHI2 Bluetooth communicates through `hci0` or `/dev/ttyS0`.
+The architecture above is the current map. The remaining investigation should focus on unresolved boundaries rather than repeating already-established architecture.
 
 ---
 
-# What Is Proven
-
-The following are directly established from the MHI2 production image:
-
-- `connectivity_launcher` launches separate `bluetooth` and `btstack` processes.
-- `btstack` waits for `/tmp/mvloaded`.
-- Bluetooth has explicit DSI and ASI interfaces.
-- The HMI has separate Bluetooth UI/model/storage/OSGi layers.
-- `telephone` is separate from `bluetooth` and `btstack`.
-- `TelephoneBluetoothBridge` connects the telephone subsystem to Bluetooth.
-- HCI capture is built into the production Bluetooth stack.
-- Bluetooth has dedicated iAP infrastructure.
-- Production `enableIap` is `false`.
-- AAC A2DP is enabled.
-- MP3 A2DP is disabled.
-- A2DP data is configured to come from HCI transport.
-- AVRCP has separate configuration.
-- HFP wideband support is enabled.
-- HFP narrowband and wideband processing resources exist.
-- MAP is configured with `smsOnly=false`.
-- Phonebook interfaces exist.
-- OBEX interfaces exist.
-- WLAN and Bluetooth share the Marvell 8787 controller.
-- Bluetooth recovery resets the shared WLAN/BT controller infrastructure.
-- The lab HCI bridge exists but is separate from the proven production architecture.
-
----
-
-# What Is Partially Traced
-
-The following components and boundaries are known but not yet completely mapped:
-
-```mermaid
-flowchart TB
-    HMI["HMI"]
-    BT["bluetooth"]
-    BTSTACK["btstack"]
-    IAP["iAP / iAP2"]
-    TELEPHONE["telephone"]
-    AUDIO["Audio"]
-    OBEX["OBEX"]
-    MARVELL["Marvell 8787"]
-
-    HMI -.-> BT
-    BT -.-> BTSTACK
-    BT -.-> IAP
-    TELEPHONE -.-> BT
-    BTSTACK -.-> AUDIO
-    BT -.-> OBEX
-    BTSTACK -.-> MARVELL
-```
-
-The missing information is primarily method-level ownership, IPC, runtime event flow and hardware transport details.
-
----
-
-# What Is Not Yet Proven
-
-The following should **not** currently be stated as fact:
-
-- The exact meaning of `topologyLogic=1`.
-- The exact code path controlled by `enableIap`.
-- The exact `bluetooth` ↔ `btstack` IPC mechanism.
-- The exact production HCI device/transport.
-- That production Bluetooth uses `hci0`.
-- That production Bluetooth uses `/dev/ttyS0`.
-- The exact RFCOMM channel allocation.
-- The complete iAP2-over-Bluetooth call path.
-- The exact MAP → OBEX call path.
-- The exact PBAP → storage call path.
-- The exact A2DP → audio-renderer path.
-- The exact HFP resource-selection path.
-- That SPP is active in production.
-
----
-
-# Trace Plan
-
-The remaining investigation should focus on the unresolved boundaries rather than repeating the already-established architecture.
-
-## 1. `bluetooth` → `btstack`
+## 2.1 `bluetooth` → `btstack`
 
 **Priority: Highest**
 
@@ -1003,16 +718,16 @@ This converts the current process-level architecture into a real call/data-flow 
 
 ---
 
-## 2. Trace `enableIap`
+## 2.2 Trace `enableIap`
 
-Target:
+Targets:
 
 ```text
 /eso/bin/apps/bluetooth
 libasimmxconnectivity_bluetooth_iapproxy.so
 ```
 
-Find:
+Trace:
 
 ```mermaid
 flowchart LR
@@ -1036,7 +751,7 @@ enableIap = false
 
 ---
 
-## 3. Trace iAP2 Transport
+## 2.3 Trace iAP2 Transport
 
 Follow the complete transport:
 
@@ -1060,7 +775,7 @@ The critical unresolved boundary is where Bluetooth transport becomes iAP2 trans
 
 ---
 
-## 4. Capture HCI During a Complete Connection
+## 2.4 Capture HCI During a Complete Connection
 
 Use the existing HCI capture facility while performing:
 
@@ -1075,7 +790,7 @@ Use the existing HCI capture facility while performing:
 8. Disconnect
 ```
 
-At the same time correlate:
+Correlate simultaneously:
 
 ```text
 CON_BTSTACK
@@ -1088,7 +803,7 @@ This should provide both packet-level and service-level evidence.
 
 ---
 
-## 5. Trace Device State
+## 2.5 Trace Device State
 
 Follow a phone through:
 
@@ -1112,7 +827,7 @@ The objective is to identify where authoritative Bluetooth device state is store
 
 ---
 
-## 6. Trace RFCOMM
+## 2.6 Trace RFCOMM
 
 Identify:
 
@@ -1123,7 +838,7 @@ Identify:
 - iAP-related channels
 - other production consumers
 
-The goal is:
+Target architecture:
 
 ```mermaid
 flowchart TB
@@ -1141,7 +856,7 @@ flowchart TB
 
 ---
 
-## 7. Trace OBEX
+## 2.7 Trace OBEX
 
 Start from:
 
@@ -1171,9 +886,9 @@ The objective is to establish the actual profile-to-application call graph.
 
 ---
 
-## 8. Trace A2DP End-to-End
+## 2.8 Trace A2DP End-to-End
 
-The existing configuration gives us a strong anchor:
+Existing configuration anchor:
 
 ```text
 getA2dpDataFromHciTransport = true
@@ -1201,7 +916,7 @@ The unresolved endpoint is the exact audio handoff.
 
 ---
 
-## 9. Trace HFP
+## 2.9 Trace HFP
 
 Correlate:
 
@@ -1224,11 +939,11 @@ The goal is to establish which runtime paths consume each resource.
 
 ---
 
-## 10. Resolve the 8787 HCI Boundary
+## 2.10 Resolve the 8787 HCI Boundary
 
 This is the major hardware-level unknown.
 
-The currently proven architecture is:
+Currently:
 
 ```mermaid
 flowchart LR
@@ -1252,11 +967,587 @@ Trace:
 - controller mailbox/control paths
 - firmware communication
 
-Do not substitute the lab `hci0` / `/dev/ttyS0` configuration for this missing production layer.
+Do **not** substitute the lab `hci0` / `/dev/ttyS0` configuration for this missing production layer.
 
 ---
 
-# Highest-Value End State
+## 2.11 Lab HCI Configuration Boundary
+
+The image contains a manufacturing/lab bridge referencing:
+
+```text
+hci0
+/dev/ttyS0
+115200
+TCP
+mlan0
+```
+
+This is useful as development/manufacturing evidence, but it is **not production transport evidence**.
+
+The lab configuration also references:
+
+```text
+mrvl/usb8782.bin
+```
+
+while the production architecture uses the 8787 SDIO firmware path.
+
+Therefore:
+
+```mermaid
+flowchart LR
+    LAB["Lab / Manufacturing"]
+    HCI["hci0"]
+    UART["/dev/ttyS0"]
+    WLAN["mlan0"]
+
+    LAB --> HCI
+    HCI --> UART
+    LAB --> WLAN
+
+    PROD["Production"]
+    PROD -.->|"separate architecture"| LAB
+```
+
+Do not use the lab configuration to claim that production MHI2 Bluetooth communicates through `hci0` or `/dev/ttyS0`.
+
+---
+
+## 2.12 SPP
+
+SPP is **not currently proven as an active production capability** for this MHI2 configuration.
+
+```mermaid
+flowchart LR
+    SPP["SPP"]
+    STATUS["Not yet proven\nfor production MHI2"]
+
+    SPP -.-> STATUS
+```
+
+Generic QNX platform documentation is not sufficient evidence for this specific production image.
+
+SPP should remain outside the confirmed production architecture until MHI2-specific evidence is found.
+
+---
+
+# 3. Component / Subsystem Breakdown
+
+## 3.1 `connectivity_launcher`
+
+`connectivity_launcher` is the production connectivity supervisor.
+
+It launches:
+
+```text
+telephone
+bluetooth
+connectionmanager
+messaging
+dev-upnp
+btstack
+nad
+```
+
+```mermaid
+flowchart TB
+    LAUNCHER["connectivity_launcher"]
+
+    LAUNCHER --> TELEPHONE["telephone"]
+    LAUNCHER --> BLUETOOTH["bluetooth"]
+    LAUNCHER --> CM["connectionmanager"]
+    LAUNCHER --> MESSAGING["messaging"]
+    LAUNCHER --> UPNP["dev-upnp"]
+    LAUNCHER --> BTSTACK["btstack"]
+    LAUNCHER --> NAD["nad"]
+```
+
+---
+
+## 3.2 High-Level `bluetooth` Service
+
+Production configuration:
+
+```json
+{
+    "topologyLogic": 1,
+    "enableIap": false
+}
+```
+
+### `topologyLogic`
+
+The configuration contains an explicit Bluetooth topology-management mode.
+
+The meaning of numeric value `1` has **not** yet been established through binary analysis.
+
+It should therefore not be assigned a meaning without tracing the Bluetooth executable.
+
+### `enableIap`
+
+Production explicitly specifies:
+
+```text
+enableIap = false
+```
+
+This establishes that Bluetooth-side iAP functionality is disabled in this configuration.
+
+It does **not** establish that iAP/iAP2 support is absent from the firmware.
+
+---
+
+## 3.3 HMI Bluetooth Architecture
+
+The HMI contains:
+
+```text
+hmi_App_Bluetooth_Main
+hmi_App_Bluetooth_DSI
+hmi_App_Bluetooth_HMI
+hmi_App_Bluetooth_Models
+hmi_App_Bluetooth_OSGI
+hmi_App_Bluetooth_Storage
+```
+
+Separate OBEX HMI components:
+
+```text
+hmi_App_Obex_Main
+hmi_App_Obex_DSI
+hmi_App_Obex_HMI
+```
+
+Architecture:
+
+```mermaid
+flowchart TB
+    HMI["MMI / HMI"]
+
+    subgraph BLUETOOTH_HMI["Bluetooth HMI"]
+        MAIN["Main"]
+        DSI["DSI"]
+        UI["HMI"]
+        MODELS["Models"]
+        OSGI["OSGi"]
+        STORAGE["Storage"]
+    end
+
+    subgraph OBEX_HMI["OBEX HMI"]
+        OBEX_MAIN["Main"]
+        OBEX_DSI["DSI"]
+        OBEX_UI["HMI"]
+    end
+
+    HMI --> MAIN
+    HMI --> DSI
+    HMI --> UI
+    HMI --> MODELS
+    HMI --> OSGI
+    HMI --> STORAGE
+
+    HMI --> OBEX_MAIN
+    HMI --> OBEX_DSI
+    HMI --> OBEX_UI
+```
+
+---
+
+## 3.4 Telephone
+
+Telephone services include:
+
+```text
+CON_CALLHANDLINGSERVICES
+CON_HANDSFREESERVICES
+CON_NADSERVICES
+CON_PHONEPOWERSERVICES
+CON_TEL
+```
+
+The important Bluetooth boundary is:
+
+```text
+TelephoneBluetoothBridge
+```
+
+with:
+
+```text
+PROXY_asi_connectivity_telephone_TelephoneBluetoothBridge
+STUB_asi_connectivity_telephone_TelephoneBluetoothBridge
+```
+
+---
+
+## 3.5 Bluetooth DSI / ASI Interfaces
+
+DSI Bluetooth:
+
+```text
+libdsibluetoothproxy.so
+
+PROXY_dsi_bluetooth_DSIBluetooth
+STUB_dsi_bluetooth_DSIBluetooth
+```
+
+OBEX authentication:
+
+```text
+PROXY_dsi_bluetooth_DSIObexAuthentication
+STUB_dsi_bluetooth_DSIObexAuthentication
+```
+
+Connectivity proxies:
+
+```text
+libasimmxconnectivity_bluetoothproxy.so
+libasimmxconnectivity_bluetooth_a2dpproxy.so
+libasimmxconnectivity_bluetooth_iapproxy.so
+```
+
+These establish the presence of dedicated interface layers, but not their complete runtime call graphs.
+
+---
+
+## 3.6 Bluetooth Protocol Stack
+
+Configured protocol-related capabilities include:
+
+```text
+stayMaster = true
+wbsSupported = true
+didSupported = true
+clockOffsetUpdate = true
+smsOnly = false
+```
+
+Audio/profile configuration:
+
+```text
+a2dpEndpointMp3Enabled = false
+a2dpEndpointAacEnabled = true
+AudioStreamPriority = 17
+getA2dpDataFromHciTransport = true
+```
+
+Current model:
+
+```mermaid
+flowchart TB
+    BTSTACK["btstack"]
+    HCI["HCI"]
+    L2CAP["L2CAP"]
+    RFCOMM["RFCOMM"]
+
+    HFP["HFP"]
+    A2DP["A2DP"]
+    AVRCP["AVRCP"]
+    MAP["MAP"]
+    PBAP["PBAP"]
+
+    BTSTACK --> HCI
+    HCI --> L2CAP
+    L2CAP --> RFCOMM
+
+    L2CAP --> HFP
+    L2CAP --> A2DP
+    L2CAP --> AVRCP
+    L2CAP --> MAP
+    L2CAP --> PBAP
+```
+
+The exact lower-level implementation remains unresolved.
+
+---
+
+## 3.7 iAP / iAP2
+
+Firmware components:
+
+```text
+/eso/bin/apps/iap
+
+libasimmxconnectivity_bluetooth_iapproxy.so
+
+devu-iap2-tegra3-ci.so
+devu-iap2ncm-tegra3-ci.so
+
+ipod-drvr-iap2.so
+mss-ipodiap2.so
+
+libiap2client.so
+iap2cli
+```
+
+The unresolved question remains:
+
+```text
+What exact code path does enableIap gate?
+```
+
+---
+
+## 3.8 A2DP
+
+Production:
+
+```text
+a2dpEndpointMp3Enabled = false
+a2dpEndpointAacEnabled = true
+getA2dpDataFromHciTransport = true
+```
+
+Known:
+
+```mermaid
+flowchart LR
+    CONTROLLER["Bluetooth Controller"]
+    HCI["HCI"]
+    BTSTACK["btstack"]
+    A2DP["A2DP"]
+    AUDIO["Audio subsystem"]
+
+    CONTROLLER --> HCI
+    HCI --> BTSTACK
+    BTSTACK --> A2DP
+    A2DP -.-> AUDIO
+```
+
+The final audio handoff is not yet mapped.
+
+---
+
+## 3.9 AVRCP
+
+AVRCP has separate configuration:
+
+```text
+AudioStreamPriority = 17
+EnableResmgrBrowsing = false
+```
+
+Therefore it must remain separate from the A2DP streaming path:
+
+```mermaid
+flowchart LR
+    BLUETOOTH["Bluetooth"]
+    A2DP["A2DP streaming"]
+    AVRCP["AVRCP control"]
+
+    BLUETOOTH --> A2DP
+    BLUETOOTH --> AVRCP
+```
+
+---
+
+## 3.10 HFP
+
+Production:
+
+```text
+wbsSupported = true
+```
+
+Resources:
+
+```text
+HFP_1_NB.bsd
+HFP_1_WB.bsd
+HFP_2_NB.bsd
+HFP_2_WB.bsd
+```
+
+These establish the presence of narrowband and wideband HFP speech-processing resources.
+
+The exact runtime selection path remains unresolved.
+
+---
+
+## 3.11 MAP / PBAP / OBEX
+
+Production:
+
+```text
+smsOnly = false
+```
+
+Phonebook interfaces:
+
+```text
+PROXY_asi_connectivity_phonebook
+STUB_asi_connectivity_phonebook
+```
+
+OBEX:
+
+```text
+DSIObexAuthentication
+hmi_App_Obex_Main
+hmi_App_Obex_DSI
+hmi_App_Obex_HMI
+```
+
+The exact profile → OBEX → application path remains unresolved.
+
+---
+
+## 3.12 Marvell 8787
+
+Wireless firmware:
+
+```text
+sd8787_uapsta.bin
+w8787_wlan_SDIO_bt_SDIO.bin
+```
+
+Host components:
+
+```text
+io-sdiorm-mib2
+mvload
+```
+
+The production Bluetooth stack waits for:
+
+```text
+/tmp/mvloaded
+```
+
+before initialising.
+
+---
+
+## 3.13 Bluetooth Reset / Recovery
+
+`reset_bt.sh` performs shared WLAN/BT recovery rather than merely restarting a Bluetooth process.
+
+```mermaid
+flowchart TB
+    FAILURE["Bluetooth failure"]
+
+    WLAN["WLAN teardown"]
+    SDIO["SDIO subsystem reset"]
+    FW["Firmware reload"]
+    RECREATE["WLAN interface recreation"]
+
+    FAILURE --> WLAN
+    WLAN --> SDIO
+    SDIO --> FW
+    FW --> RECREATE
+```
+
+This is direct evidence of the shared hardware dependency between Bluetooth and WLAN.
+
+---
+
+## 3.14 Lab HCI Interface
+
+Manufacturing/lab configuration references:
+
+```text
+hci0
+/dev/ttyS0
+115200
+TCP
+mlan0
+```
+
+It also references:
+
+```text
+mrvl/usb8782.bin
+```
+
+This must remain separated from the production 8787 SDIO architecture.
+
+---
+
+# 4. Evidence Status
+
+## Proven
+
+The following are directly established from the MHI2 production image:
+
+- `connectivity_launcher` launches separate `bluetooth` and `btstack` processes.
+- `btstack` waits for `/tmp/mvloaded`.
+- Bluetooth has explicit DSI and ASI interfaces.
+- The HMI has separate Bluetooth UI/model/storage/OSGi layers.
+- `telephone` is separate from `bluetooth` and `btstack`.
+- `TelephoneBluetoothBridge` connects the telephone subsystem to Bluetooth.
+- HCI capture is built into the production Bluetooth stack.
+- Bluetooth has dedicated iAP infrastructure.
+- Production `enableIap` is `false`.
+- AAC A2DP is enabled.
+- MP3 A2DP is disabled.
+- A2DP data is configured to come from HCI transport.
+- AVRCP has separate configuration.
+- HFP wideband support is enabled.
+- HFP narrowband and wideband processing resources exist.
+- MAP is configured with `smsOnly=false`.
+- Phonebook interfaces exist.
+- OBEX interfaces exist.
+- WLAN and Bluetooth share the Marvell 8787 controller.
+- Bluetooth recovery resets the shared WLAN/BT controller infrastructure.
+- The lab HCI bridge exists but is separate from the proven production architecture.
+
+---
+
+## Partially Traced
+
+The following components and boundaries are known but not yet completely mapped:
+
+```mermaid
+flowchart TB
+    HMI["HMI"]
+    BT["bluetooth"]
+    BTSTACK["btstack"]
+    IAP["iAP / iAP2"]
+    TELEPHONE["telephone"]
+    AUDIO["Audio"]
+    OBEX["OBEX"]
+    MARVELL["Marvell 8787"]
+
+    HMI -.-> BT
+    BT -.-> BTSTACK
+    BT -.-> IAP
+    TELEPHONE -.-> BT
+    BTSTACK -.-> AUDIO
+    BT -.-> OBEX
+    BTSTACK -.-> MARVELL
+```
+
+The missing information is primarily:
+
+- method-level ownership
+- IPC
+- runtime event flow
+- hardware transport details
+
+---
+
+## Not Yet Proven
+
+The following should **not** currently be stated as fact:
+
+- The exact meaning of `topologyLogic=1`.
+- The exact code path controlled by `enableIap`.
+- The exact `bluetooth` ↔ `btstack` IPC mechanism.
+- The exact production HCI device/transport.
+- That production Bluetooth uses `hci0`.
+- That production Bluetooth uses `/dev/ttyS0`.
+- The exact RFCOMM channel allocation.
+- The complete iAP2-over-Bluetooth call path.
+- The exact MAP → OBEX call path.
+- The exact PBAP → storage call path.
+- The exact A2DP → audio-renderer path.
+- The exact HFP resource-selection path.
+- That SPP is active in production.
+
+---
+
+# 5. Highest-Value End State
 
 The Bluetooth investigation is complete when the current conceptual architecture can be replaced with a fully traceable chain:
 
@@ -1298,13 +1589,20 @@ flowchart TB
     BT_SERVICE <--> HMI
 ```
 
-The objective is to replace every unresolved boundary with a verified process, library, interface, function, device or protocol transition.
+The objective is to replace every unresolved boundary with a verified:
+
+- process
+- library
+- interface
+- function
+- device
+- protocol transition
 
 ---
 
-# Evidence Discipline
+# 6. Evidence Discipline
 
-Three evidence states are used throughout this document:
+Three evidence states are used throughout this document.
 
 ### Proven
 
