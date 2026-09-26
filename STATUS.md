@@ -1,0 +1,85 @@
+# Repository Status
+
+> **Project:** MHI2 Wireless CarPlay  
+> **Platform:** Audi MHI2 / MU0678-class QNX  
+> **Purpose:** Evidence-driven reverse engineering and implementation of Wireless Apple CarPlay using the existing MHI2 connectivity and CarPlay stack.
+
+## Current State
+
+The repository has mapped the major MHI2 subsystems relevant to Wireless CarPlay:
+
+- Marvell 8787 WLAN/BT hardware
+- WLAN/AP infrastructure and `uap0`
+- Bluetooth and `btstack`
+- iAP/iAP2 infrastructure
+- USB CarPlay networking via `carplay0`
+- DIO CarPlay integration
+- AirPlay receiver and Bonjour/mDNS infrastructure
+- existing Bluetooth/WLAN coexistence
+
+The production USB architecture is substantially mapped. The Wireless CarPlay architecture is **not yet proven end-to-end**.
+
+## Current Integration Boundary
+
+```text
+PRODUCTION
+
+iPhone
+ ├─ USB → /dev/ipod0 → iAP2 → DIO
+ └─ USB → devnp-usbdnet.so → carplay0 → DIO / AirPlay
+
+TARGET
+
+iPhone
+ ├─ Bluetooth → wireless iAP2 → DIO
+ └─ Wi-Fi → uap0 → mDNS / AirPlay → DIO
+```
+
+The target diagram describes the investigation target, not a completed implementation.
+
+## Highest-Value Open Questions
+
+1. What exact code path is controlled by `enableIap=false`?
+2. What is the Bluetooth → iAP2 runtime path?
+3. Is DIO's `/dev/ipod0` dependency transport-specific or intrinsic?
+4. Where is `MDNS_DIRECTLINK_IFACE=carplay0` consumed?
+5. What arguments does DIO pass to AirPlay interface/transport setters?
+6. How are Bluetooth/iAP2 and Wi-Fi/AirPlay associated with the same phone/session?
+7. Can the existing AirPlay implementation operate on `uap0` without modification?
+8. What exact runtime call graph connects session creation to the media/HMI paths?
+
+## Evidence Rules
+
+Every new finding should be classified as one or more of:
+
+- **Static evidence** — strings, symbols, configuration, disassembly.
+- **Runtime evidence** — observed process, interface, session or system behaviour.
+- **Protocol evidence** — HCI, iAP2, mDNS or AirPlay traces.
+- **Controlled experiment** — deliberate modification followed by observation.
+- **Inference** — interpretation that still requires MHI2-specific confirmation.
+
+See [Evidence](docs/evidence.md) for the authoritative evidence register and [Disproven](docs/disproven.md) for eliminated interpretations.
+
+## Current Documentation Layers
+
+- [Wireless CarPlay Architecture](docs/wireless-carplay-architecture.md) — end-to-end integration map.
+- [Bluetooth](docs/bluetooth.md) — Bluetooth subsystem.
+- [iAP2](docs/iap2.md) — iAP/iAP2 subsystem and transport boundary.
+- [Wi-Fi](docs/wifi.md) — WLAN/AP subsystem.
+- [AirPlay](docs/airplay.md) — AirPlay, Bonjour and interface selection.
+- [CarPlay](docs/carplay.md) — DIO/CarPlay integration.
+- [Binaries](docs/binaries.md) — binary/process inventory.
+- [Firmware](docs/firmware.md) — firmware provenance and analysis baseline.
+- [Glossary](docs/glossary.md) — project terminology.
+- [Evidence](docs/evidence.md) — evidence register.
+- [Disproven](docs/disproven.md) — eliminated interpretations.
+- [SSH Environment](docs/ssh-environment.md) — runtime investigation environment.
+- [Call Graphs](docs/call-graphs/README.md) — function-level tracing structure.
+
+## Explicitly Retired
+
+`docs/wireless-capability-breakdown.md` was a broad aggregation that overlapped the subsystem documents. Its unique useful material should live in the appropriate subsystem/connectivity documentation rather than maintaining a second architecture source.
+
+## Immediate Research State
+
+The project is currently in the **transport-boundary tracing** phase. The next implementation decisions should be based on concrete traces of Bluetooth/iAP2, DIO, mDNS and AirPlay rather than on the existence of firmware components alone.
