@@ -71,7 +71,7 @@ The exact open/use sequence and whether `CIpodAP2Service` accepts an alternate t
 
 - E-005 — production CarPlay uses `/dev/ipod0`
 - E-010 — DIO contains iAP2 integration symbols
-- E-015 — Wireless CarPlay is not yet proven end-to-end
+- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
