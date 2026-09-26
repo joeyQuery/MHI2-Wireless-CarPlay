@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | End-to-end phone/session identity correlation |
+| Process / binary | Cross-process: Bluetooth, iAP2, WLAN, mDNS, DIO, AirPlay |
+| Caller / callee | No complete production cross-system edge chain recovered |
+| Arguments | Not applicable until correlation trace exists |
+| Return / error behaviour | Not applicable |
+| IPC / ASI / DSI boundary | Cross-process/session boundaries unresolved |
+| Device / socket / file boundary | Bluetooth identity, Wi-Fi association/IP and AirPlay session identifiers must be joined |
+| Protocol event | HCI/iAP2/Wi-Fi/mDNS/AirPlay correlation required |
+| Runtime confirmation | Target only; no timestamp-correlated production session trace committed |
+| Evidence IDs | E-013 |
+| Remaining uncertainty | Identity join across all transports and session lifecycle |
+
 Establish that Bluetooth bootstrap, Wi-Fi association, iAP2 events, mDNS discovery and AirPlay session creation belong to the same phone/session.
 
 ## Required chain
