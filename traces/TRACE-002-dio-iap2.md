@@ -12,17 +12,44 @@ Determine whether DIO's iAP2 service is intrinsically tied to USB `/dev/ipod0` o
 |---|---|
 | Entry point | DIO iAP2 integration surface (`iAP2Connect` / `CIpodAP2Service`) |
 | Process / binary | `dio_manager` plus iAP2 components |
-| Caller / callee | `notifyiAP2DeviceConnected` / `iAP2Connect` / `CIpodAP2Service` are identified; exact device-open/use sequence unresolved |
+| Caller / callee | `notifyiAP2DeviceConnected` / `iAP2Connect` / `CIpodAP2Service` are identified; `iap2_connect` and `iap2_disconnect` callsites are recovered in `dio_manager` |
 | Arguments | Unresolved |
 | Return / error behaviour | Unresolved |
 | IPC / ASI / DSI boundary | Unresolved |
-| Device / socket / file boundary | Production `/dev/ipod0` is established; exact open/use ownership unresolved |
+| Device / socket / file boundary | Production `/dev/ipod0` is established; `iap2.device` configuration and DIO callsites are recovered, but exact lower-level open/use ownership remains unresolved |
 | Protocol event | iAP2 event boundary not fully recovered |
 | Runtime confirmation | Production `/dev/ipod0` use is established; complete DIO→transport runtime path is not |
-| Evidence IDs | E-005, E-010 |
+| Evidence IDs | E-005, E-010, E-016 |
 | Remaining uncertainty | Transport abstraction versus intrinsic USB dependency |
 
 Determine whether DIO's iAP2 service is intrinsically tied to the USB `/dev/ipod0` device or consumes a transport abstraction.
+
+## Newly recovered binary trace
+
+Production `dio_manager` contains:
+
+```text
+iap2.device = /dev/ipod0
+iap2_connect  0x115de8
+iap2_disconnect 0x115e00
+```
+
+Direct callsites recovered in the binary are:
+
+```text
+0x15dde0 -> iap2_connect
+0x15dbfc -> iap2_disconnect
+```
+
+The production configuration also contains the CIpodAP2Service messages:
+
+```text
+[CIpodAP2Service] ... Connected to iAP2 driver, at: "%s"
+[CIpodAP2Service] ... Connect to iAP2 driver at: "%s"
+[CIpodAP2Service] ... Failed to connect to iAP2 driver at: "%s"
+```
+
+This strengthens the production DIO-side USB boundary from component inventory to a recovered configuration value and dynamic-call boundary. It does not prove that DIO can or cannot consume the Bluetooth-side iAP transport.
 
 ## Established
 
