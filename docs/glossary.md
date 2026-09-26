@@ -63,15 +63,7 @@ The initial device/session establishment phase preceding the complete CarPlay me
 A logical CarPlay/AirPlay interaction associated with a phone. Session creation, mode changes and finalization are exposed by DIO/AirPlay integration symbols.
 
 ## Screen / Stream
-A CarPlay media/display path. These terms should not be used to imply a particular AirPlay stream type unless the relevant protocol evidence is present.
-
-## 110 / 111
-Previously investigated AirPlay stream type values:
-
-- `110` — normal/main CarPlay screen.
-- `111` — alternate/secondary CarPlay screen.
-
-`111` is an AirPlay stream type selection for the alternate stream. It is not itself the source of descriptive display information, and `altScreen` belongs to AirPlay feature negotiation rather than iAP2 Identify.
+A CarPlay media/display path. Use these terms only for the media path actually being discussed; do not assign protocol stream identifiers unless the relevant evidence is part of the current Wireless CarPlay investigation.
 
 ## Evidence Classes
 See [Evidence](evidence.md): Static evidence, Runtime evidence, Protocol evidence, Controlled experiment and Inference.
