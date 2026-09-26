@@ -4,6 +4,8 @@
 
 ## Objective
 
+Recover the production Bluetooth → iAP2 bootstrap path used for CarPlay-capable device establishment.
+
 ## Trace Record
 
 | Field | Current state |
@@ -17,7 +19,7 @@
 | Device / socket / file boundary | Transport/device boundary unresolved |
 | Protocol event | Bluetooth/iAP2 protocol transition not yet captured as one production trace |
 | Runtime confirmation | Component/runtime observations exist, but no complete timestamped Bluetooth→iAP2 execution trace is committed |
-| Evidence IDs | E-006, E-007, E-013 |
+| Evidence IDs | E-006, E-007 |
 | Remaining uncertainty | `enableIap` control flow, transport creation and DIO handoff |
 
 Recover the production path from MHI2 Bluetooth handling into iAP/iAP2 for the CarPlay bootstrap.
@@ -61,7 +63,6 @@ The existence of these components is proven; the arrows after the component boun
 
 - E-006 — production `enableIap=false`
 - E-007 — Bluetooth-side iAP proxy exists
-- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
