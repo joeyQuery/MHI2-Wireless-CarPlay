@@ -4,6 +4,22 @@
 
 ## Objective
 
+## Trace Record
+
+| Field | Current state |
+|---|---|
+| Entry point | AirPlay network/interface setup |
+| Process / binary | `libairplay.so` |
+| Caller / callee | Interface-selection APIs and socket helper APIs are identified; internal propagation is unresolved |
+| Arguments | Unresolved |
+| Return / error behaviour | Unresolved |
+| IPC / ASI / DSI boundary | Unresolved |
+| Device / socket / file boundary | Socket/interface boundary is the target; actual production interface unresolved |
+| Protocol event | Bonjour/AirPlay networking APIs are present; production socket path not fully correlated |
+| Runtime confirmation | No complete runtime proof of the selected interface is committed |
+| Evidence IDs | E-008, E-009 |
+| Remaining uncertainty | Setter implementation, interface comparisons and actual socket binding |
+
 Connect the AirPlay interface-selection API surface to the actual socket/network interface used by the receiver.
 
 ## Established
