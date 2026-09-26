@@ -34,6 +34,13 @@ This is the central evidence ledger for the project. It prevents architectural d
 | E-011 | WLAN/Bluetooth coexistence configuration exists | Static | Proven | `coex.cfg` / Wi-Fi docs | Does not prove CarPlay-specific tuning |
 | E-012 | `hci0` / `/dev/ttyS0` lab configuration is not production proof | Static comparison | Proven as limitation | `docs/bluetooth.md` | Do not use it as production HCI transport |
 | E-013 | Wireless CarPlay is not yet proven end-to-end | Cross-system | Proven | Current repository state | Target remains an investigation target |
+| E-014 | Production `iap` contains a dedicated Bluetooth iAP channel implementation | Static | Proven | `eso/bin/apps/iap` | `CIapBTChannel` implements open/connect/read/write/close/update; `openiAPDevice` reaches `open64`; no `/dev/ipod0` literal was found in this binary |
+| E-015 | Bluetooth iAP uses an IPC-facing IapDeviceServices boundary | Static | Proven | `eso/bin/apps/iap`, `eso/lib/factories/libasimmxconnectivity_bluetooth_iapproxy.so` | Proxy/service/reply classes identify `asi.connectivity.bluetooth.iap.IapDeviceServices`; exact endpoint publication/consumer path remains unresolved |
+| E-016 | DIO's production iAP2 boundary is explicitly `/dev/ipod0` | Static | Proven | `eso/bin/apps/dio_manager` | `iap2.device` resolves to `/dev/ipod0`; `iap2_connect`/`iap2_disconnect` are dynamically referenced with direct callsites |
+| E-017 | DIO contains production `MDNS_DIRECTLINK_IFACE=carplay0` configuration | Static | Proven | `eso/bin/apps/dio_manager` | String is present in configuration metadata; downstream consumer and binding are still unresolved |
+| E-018 | Production AirPlay screen interface setters are no-op stubs | Static / Disassembly | Proven | pristine `eso/lib/libairplay.so` | `SetClientIfMACAddr`, `SetIFName`, and `SetTransportType` each reduce to `bx lr`; their presence does not prove active interface selection |
+| E-019 | `SocketSetBoundInterface` is not an active selector in production `libairplay.so` | Static / Disassembly | Proven | pristine `eso/lib/libairplay.so` | Entry is a tiny stub/constant-return; do not treat it as the production binding mechanism |
+| E-020 | AirPlay still contains real packet/multicast interface and Wi-Fi classification helpers | Static / Disassembly | Proven | pristine `eso/lib/libairplay.so` | `SocketSetPacketReceiveInterface`, `SocketSetMulticastInterface`, and `IsWiFiNetworkInterface` have substantive implementations; actual production call path remains unresolved |
 
 ## Trace Cross-Reference
 
