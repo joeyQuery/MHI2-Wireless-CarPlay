@@ -61,7 +61,7 @@ Correlate, from one controlled session:
 
 ## Related evidence
 
-- E-015 — Wireless CarPlay is not yet proven end-to-end
+- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Completion criterion
 
