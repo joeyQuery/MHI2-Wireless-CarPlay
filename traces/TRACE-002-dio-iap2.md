@@ -4,6 +4,8 @@
 
 ## Objective
 
+Determine whether DIO's iAP2 service is intrinsically tied to USB `/dev/ipod0` or consumes a transport abstraction.
+
 ## Trace Record
 
 | Field | Current state |
@@ -17,7 +19,7 @@
 | Device / socket / file boundary | Production `/dev/ipod0` is established; exact open/use ownership unresolved |
 | Protocol event | iAP2 event boundary not fully recovered |
 | Runtime confirmation | Production `/dev/ipod0` use is established; complete DIO→transport runtime path is not |
-| Evidence IDs | E-005, E-010, E-013 |
+| Evidence IDs | E-005, E-010 |
 | Remaining uncertainty | Transport abstraction versus intrinsic USB dependency |
 
 Determine whether DIO's iAP2 service is intrinsically tied to the USB `/dev/ipod0` device or consumes a transport abstraction.
@@ -71,7 +73,6 @@ The exact open/use sequence and whether `CIpodAP2Service` accepts an alternate t
 
 - E-005 — production CarPlay uses `/dev/ipod0`
 - E-010 — DIO contains iAP2 integration symbols
-- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Required next trace
 
