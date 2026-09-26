@@ -25,7 +25,7 @@ No target arrow is evidence by itself.
 
 ## Trace record format
 
-Every trace should record:
+Every trace should record the following fields, even when the value is `Unresolved`, `Not captured`, or `Not applicable`:
 
 - entry point;
 - process/binary;
@@ -43,4 +43,4 @@ Every trace should record:
 
 Completed trace facts outrank architectural prose. See [Source of Truth](../docs/source-of-truth.md).
 
-Raw runtime captures and experiment repositories are intentionally outside this directory.
+Raw runtime captures and experiment repositories are intentionally outside this directory. Therefore a trace may cite a runtime observation without being repository-reproducible; that limitation must be stated explicitly in the trace record.
