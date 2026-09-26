@@ -62,7 +62,7 @@ The important finding is that the existing CarPlay implementation is not simply 
 
 # Wireless CarPlay Target
 
-The target architecture is to preserve the existing DIO / AirPlay / CarPlay stack while replacing the USB-specific transport dependencies.
+The target architecture is to preserve the existing DIO / AirPlay / CarPlay stack while replacing the USB-specific transport dependencies. All edges in the target diagram are unresolved targets, not proven execution edges.
 
 ~~~mermaid
 flowchart TB
@@ -77,16 +77,16 @@ flowchart TB
     CP["CarPlay session"]
     MMI["MHI2 MMI"]
 
-    PHONE --> BT
-    BT --> WIAP
-    WIAP --> DIO
-    PHONE --> WIFI
-    WIFI --> UAP
-    UAP --> MDNS
-    MDNS --> DIO
-    DIO --> AIRPLAY
-    AIRPLAY --> CP
-    CP --> MMI
+    PHONE -.-> BT
+    BT -.-> WIAP
+    WIAP -.-> DIO
+    PHONE -.-> WIFI
+    WIFI -.-> UAP
+    UAP -.-> MDNS
+    MDNS -.-> DIO
+    DIO -.-> AIRPLAY
+    AIRPLAY -.-> CP
+    CP -.-> MMI
 ~~~
 
 This is the **target architecture**, not a claim that every edge has already been proven on production MHI2.
