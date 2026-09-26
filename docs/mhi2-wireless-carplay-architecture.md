@@ -1,0 +1,1000 @@
+# 1. The complete architecture
+
+The evidence supports this overall structure:
+
+```
+                         MMI / HMI
+                            │
+             Bluetooth HMI / OSGi / Models / Storage
+                            │
+                            │ DSI
+                            ▼
+                  ┌────────────────────┐
+                  │  Bluetooth service │
+                  │     "bluetooth"   │
+                  └─────────┬──────────┘
+                            │
+                 ASI / DSI service interfaces
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+       telephoneProc                connectivityProc
+              │                           │
+              │                           ▼
+              │                      btstack
+              │                           │
+              │                    HCI / L2CAP /
+              │                    RFCOMM / profiles
+              │                           │
+              │                           ▼
+              │                    Bluetooth controller
+              │                           │
+              │                           │ SDIO
+              │                           ▼
+              │                  Marvell 8787 BT/WLAN
+              │                       firmware
+              │
+              ├── HandsfreeServices
+              ├── CallHandlingServices
+              ├── Phonebook
+              └── TelephoneBluetoothBridge
+```
+
+And underneath that:
+
+```
+connectivity_launcher
+       │
+       ├── telephone
+       ├── bluetooth
+       ├── connectionmanager
+       ├── messaging
+       ├── dev-upnp
+       ├── btstack
+       └── nad
+```
+
+That process separation is explicitly present in the production `connectivity.json`.
+
+---
+
+# 2. `connectivity_launcher` is the top-level Bluetooth supervisor
+
+The production configuration explicitly defines:
+
+```
+applications:
+    telephone
+    bluetooth
+    connectionmanager
+    messaging
+    dev-upnp
+    btstack
+    nad
+```
+
+with:
+
+```
+bluetooth:
+    /eso/bin/apps/bluetooth
+
+btstack:
+    /eso/bin/apps/btstack
+```
+
+So these are **two separate executables**, not two names for the same thing.
+
+More importantly, `btstack` has:
+
+```
+preCondition: /tmp/mvloaded
+```
+
+That means the BT stack is not permitted to initialise until the WLAN/Marvell firmware-loading stage has produced `/tmp/mvloaded`.
+
+The launcher also defines an explicit BT failure path:
+
+```
+bluetooth failure
+      │
+      ▼
+btstack shutdown
+      │
+      ▼
+/eso/bin/reset_bt.sh
+      │
+      ▼
+btstack init
+      │
+      ▼
+btstack run
+```
+
+And `btstack` itself has:
+
+```
+onFailure:
+    /eso/bin/reset_bt.sh
+```
+
+There is also:
+
+```
+onLeaveCustomerUpdate:
+    /eso/bin/reset_bt.sh
+```
+
+So **BT reset/recovery is architecturally owned by the connectivity launcher**, not by the HMI.
+
+---
+
+# 3. The `bluetooth` process is the high-level Bluetooth service
+
+The actual binary is:
+
+```
+/eso/bin/apps/bluetooth
+```
+
+Size in the dump:
+
+```
+1,364,493 bytes
+```
+
+There is also a customer override:
+
+```
+/eso/bin/PhoneCustomer/bluetooth
+```
+
+The production configuration gives the Bluetooth application:
+
+```
+"topologyLogic": 1,
+"enableIap": false
+```
+
+That gives us two concrete facts:
+
+### Topology logic
+
+There is an explicit Bluetooth topology-management mode.
+
+We should **not** invent what numeric mode `1` means without disassembling the Bluetooth application.
+
+### iAP
+
+The production Bluetooth service explicitly has:
+
+```
+enableIap = false
+```
+
+So the Bluetooth service's iAP functionality is disabled in this configuration.
+
+That is particularly interesting because the system separately contains:
+
+```
+libasimmxconnectivity_bluetooth_iapproxy.so
+```
+
+The interface exists, but production configuration disables the functionality.
+
+---
+
+# 4. `btstack` is the actual protocol-stack side
+
+The second executable is:
+
+```
+/eso/bin/apps/btstack
+```
+
+Size:
+
+```
+1,912,117 bytes
+```
+
+The configuration exposes a very different set of responsibilities for this process.
+
+The production configuration contains:
+
+```
+"btstack": {
+    "hciStartupCapture": true,
+    "hciCaptureMaskedL2capChannels": false,
+    "stayMaster": true,
+    "wbsSupported": true,
+    "didSupported": true,
+    "clockOffsetUpdate": true,
+    "smsOnly": false,
+
+    "a2dpEndpointMp3Enabled": false,
+    "a2dpEndpointAacEnabled": true,
+
+    "AudioStreamPriority": 17,
+
+    "getA2dpDataFromHciTransport": true
+}
+```
+
+This is extremely useful because these aren't generic filenames — they are **production configuration switches controlling the live Bluetooth stack**.
+
+---
+
+# 5. HCI capture is built into the production stack
+
+The MHI2 production configuration explicitly has:
+
+```
+hciStartupCapture = true
+```
+
+There is also:
+
+```
+hciCaptureMaskedL2capChannels = false
+```
+
+The Bluetooth trace configuration separately exposes:
+
+```
+CON_BTSTACK_HCICAPTURE
+```
+
+at trace level.
+
+Therefore the stack has a built-in HCI capture facility.
+
+And importantly:
+
+```
+getA2dpDataFromHciTransport = true
+```
+
+So the A2DP audio path is explicitly configured to obtain its data from the HCI transport.
+
+That gives us a concrete lower-level path:
+
+```
+Bluetooth controller
+       │
+       │ HCI transport
+       ▼
+     btstack
+       │
+       ├── Bluetooth protocol processing
+       │
+       └── A2DP audio extraction
+```
+
+This is much more concrete than simply saying "Bluetooth uses HCI."
+
+---
+
+# 6. The production stack is explicitly HCI-aware
+
+The trace configuration contains:
+
+```
+CON_BTSTACK
+CON_BTSTACK_IA
+CON_BTSTACK_IA_SAP
+CON_BTSTACK_HCICAPTURE
+```
+
+The default preset enables:
+
+```
+CON_BTSTACK = debug
+CON_BTSTACK_IA_SAP = trace
+CON_BTSTACK_HCICAPTURE = trace
+```
+
+The special tracing modes include:
+
+```
+enableHciCapturing
+enableIAnywhereTracing
+```
+
+So there are at least three distinct diagnostic layers:
+
+```
+BT stack general tracing
+        │
+        ├── iAnywhere / IA tracing
+        │
+        └── HCI capture tracing
+```
+
+This is significant because the production stack is clearly not merely an Audi wrapper around some opaque external daemon.
+
+---
+
+# 7. What Bluetooth software stack is underneath
+
+The QNX CAR Bluetooth architecture is useful here as **external context**, but I am keeping it separate from the MHI2-specific evidence.
+
+QNX's CAR documentation describes its Bluetooth architecture as:
+
+```
+applications
+    │
+PPS / QDB
+    │
+pps-bluetooth
+    │
+io-bluetooth
+    │
+BT profiles / BTMGR
+    │
+HCI driver
+    │
+Bluetooth hardware
+```
+
+with HFP, MAP, PBAP, SPP and A2DP/AVRCP represented in the stack. [QNX Support](https://support7.qnx.com/download/download/26201/Bluetooth_Architectural_Overview_and_Configuration_Guide.pdf?utm_source=chatgpt.com)
+
+However, **the MHI2 dump does not contain the classic QNX&#x20;****`io-bluetooth`****&#x20;/&#x20;****`pps-bluetooth`****&#x20;architecture as the obvious production process boundary**.
+
+Instead, the MHI2 has:
+
+```
+bluetooth
+btstack
+```
+
+and the Audi/ESO ASI/DSI framework around them.
+
+So I would **not** label the MHI2 process `btstack` as `io-bluetooth` without disassembly proving that equivalence.
+
+---
+
+# 8. The HMI Bluetooth layer is very clearly separated
+
+The HMI tracing configuration contains:
+
+```
+hmi_App_Bluetooth_Main
+hmi_App_Bluetooth_DSI
+hmi_App_Bluetooth_HMI
+hmi_App_Bluetooth_Models
+hmi_App_Bluetooth_OSGI
+hmi_App_Bluetooth_Storage
+```
+
+There is also a complete OBEX HMI layer:
+
+```
+hmi_App_Obex_Main
+hmi_App_Obex_DSI
+hmi_App_Obex_HMI
+```
+
+So the HMI architecture is:
+
+```
+HMI
+ │
+ ├── Bluetooth Main
+ ├── Bluetooth DSI
+ ├── Bluetooth HMI
+ ├── Bluetooth Models
+ ├── Bluetooth OSGi
+ ├── Bluetooth Storage
+ │
+ └── OBEX
+      ├── Main
+      ├── DSI
+      └── HMI
+```
+
+This is not a single monolithic Bluetooth UI.
+
+---
+
+# 9. DSI interface between HMI/service and Bluetooth
+
+The dump contains:
+
+```
+libdsibluetoothproxy.so
+```
+
+Size:
+
+```
+121,192 bytes
+```
+
+That is a direct piece of evidence for the DSI Bluetooth interface.
+
+The trace configuration also explicitly exposes:
+
+```
+PROXY_dsi_bluetooth_DSIBluetooth
+STUB_dsi_bluetooth_DSIBluetooth
+```
+
+both at trace level.
+
+There is another interface:
+
+```
+DSIObexAuthentication
+```
+
+with:
+
+```
+PROXY_dsi_bluetooth_DSIObexAuthentication
+STUB_dsi_bluetooth_DSIObexAuthentication
+```
+
+So we can establish:
+
+```
+HMI / Bluetooth application
+          │
+          │ DSI
+          ▼
+     DSIBluetooth
+          │
+          └── DSIObexAuthentication
+```
+
+---
+
+# 10. The ASI side is also explicit
+
+The dump contains:
+
+```
+libasimmxconnectivity_bluetoothproxy.so
+```
+
+```
+libasimmxconnectivity_bluetooth_a2dpproxy.so
+```
+
+```
+libasimmxconnectivity_bluetooth_iapproxy.so
+```
+
+Therefore the Bluetooth service also exposes the connectivity/ASI side:
+
+```
+Bluetooth
+    │
+    ├── BluetoothServices
+    ├── A2DP
+    └── iAP
+```
+
+The iAP proxy exists even though:
+
+```
+enableIap = false
+```
+
+So interface availability and runtime enablement are separate things.
+
+---
+
+# 11. Bluetooth diagnostic interface
+
+There is also:
+
+```
+libasimmxDiagBluetoothTypesproxy.so
+```
+
+This is separate from:
+
+```
+libasimmxconnectivity_bluetoothproxy.so
+```
+
+So there are at least two conceptual interface families:
+
+```
+Bluetooth functionality
+    └── connectivity_bluetooth*
+
+Bluetooth diagnostics
+    └── DiagBluetoothTypes
+```
+
+Again, the trace configuration supports that separation.
+
+---
+
+# 12. Telephone is not the Bluetooth stack
+
+This distinction is very important.
+
+The launcher starts:
+
+```
+telephone
+```
+
+separately from:
+
+```
+bluetooth
+btstack
+```
+
+The telephone trace configuration exposes:
+
+```
+CON_CALLHANDLINGSERVICES
+CON_HANDSFREESERVICES
+CON_NADSERVICES
+CON_PHONEPOWERSERVICES
+CON_TEL
+```
+
+and, critically:
+
+```
+PROXY_asi_connectivity_telephone_TelephoneBluetoothBridge
+STUB_asi_connectivity_telephone_TelephoneBluetoothBridge
+```
+
+There is a corresponding proxy:
+
+```
+libasimmxtelephoneproxy.so
+```
+
+So the architecture is not:
+
+```
+telephone = Bluetooth
+```
+
+It is:
+
+```
+telephone
+   │
+   │ TelephoneBluetoothBridge
+   ▼
+Bluetooth subsystem
+```
+
+That bridge is one of the key architectural boundaries.
+
+---
+
+# 13. Hands-free call path
+
+The telephone process exposes:
+
+```
+HandsfreeServices
+CallHandlingServices
+```
+
+and the Bluetooth side has:
+
+```
+wbsSupported = true
+```
+
+The dump also contains four HFP speech-processing resources:
+
+```
+HFP_1_NB.bsd
+HFP_1_WB.bsd
+HFP_2_NB.bsd
+HFP_2_WB.bsd
+```
+
+where:
+
+```
+NB = narrowband
+WB = wideband
+```
+
+I am not going to infer exactly which HFP channel/device corresponds to `1` vs `2` without tracing their consumers.
+
+But the existence of four dedicated HFP speech configurations plus `wbsSupported=true` is hard evidence that the production image has explicit HFP narrowband/wideband audio processing resources.
+
+---
+
+# 14. Bluetooth audio is not handled by telephone alone
+
+The production connectivity configuration has a dedicated AVRCP section:
+
+```
+"avrcp": {
+    "AudioStreamPriority": 17,
+    "EnableResmgrBrowsing": false
+}
+```
+
+and the Bluetooth stack has:
+
+```
+"AudioStreamPriority": 17
+```
+
+plus:
+
+```
+getA2dpDataFromHciTransport = true
+```
+
+So there is an audio-specific path:
+
+```
+Bluetooth controller
+       │
+       │ HCI
+       ▼
+    btstack
+       │
+       │ A2DP
+       ▼
+  audio/AVRCP layer
+       │
+       ▼
+    renderer/audio
+```
+
+The exact renderer process/device still needs to be tied down from the relevant audio configuration and runtime process graph; I won't invent that connection.
+
+---
+
+# 15. A2DP codec configuration is explicit
+
+This is one of the strongest findings.
+
+Production says:
+
+```
+a2dpEndpointMp3Enabled = false
+a2dpEndpointAacEnabled = true
+```
+
+Therefore, for the configured A2DP endpoint:
+
+**AAC is enabled.**
+
+**MP3 is disabled.**
+
+That is much stronger than merely finding AAC/MP3 strings in a binary.
+
+The comment immediately above these settings says that the settings override the adaptation layer:
+
+```
+if a codec is disabled here,
+it can't be enabled via adaptation
+```
+
+So the production configuration intentionally restricts the A2DP endpoint.
+
+---
+
+# 16. AVRCP is independently configured
+
+The production configuration explicitly calls this:
+
+```
+CONFIGURATION SECTION FOR AVRCP RESOURCE MANAGER
+```
+
+and specifies:
+
+```
+AudioStreamPriority = 17
+```
+
+and:
+
+```
+EnableResmgrBrowsing = false
+```
+
+So:
+
+```
+A2DP
+```
+
+and:
+
+```
+AVRCP
+```
+
+are not simply one generic "Bluetooth audio" feature.
+
+The system has a separate AVRCP resource-manager configuration.
+
+The QNX reference architecture likewise separates AVRCP control from A2DP streaming. [QNX Support](https://support7.qnx.com/download/download/26201/Bluetooth_Architectural_Overview_and_Configuration_Guide.pdf?utm_source=chatgpt.com)
+
+---
+
+# 17. MAP is present
+
+The `btstack` configuration contains:
+
+```
+smsOnly = false
+```
+
+and the comments identify this explicitly as:
+
+```
+MAP - SMS only
+```
+
+with the caveat that some platforms support email as well.
+
+For this MHI2 configuration:
+
+```
+smsOnly = false
+```
+
+So the configuration **does not restrict MAP to SMS only**.
+
+That does not, by itself, prove that every possible MAP email operation is enabled end-to-end. It proves the production stack is configured with the non-SMS-only mode.
+
+The telephone trace architecture also exposes:
+
+```
+PROXY_asi_connectivity_phonebook
+STUB_asi_connectivity_phonebook
+```
+
+and the HMI has:
+
+```
+hmi_App_Obex_*
+```
+
+which gives us the higher-level messaging/OBEX side.
+
+---
+
+# 18. PBAP/phonebook is explicitly represented
+
+The telephone trace configuration contains:
+
+```
+PROXY_asi_connectivity_phonebook
+STUB_asi_connectivity_phonebook
+```
+
+So phonebook functionality is not merely inferred from "telephone."
+
+There is an explicit connectivity phonebook interface.
+
+The exact database backend and on-disk database locations are not proven yet from the evidence I've traced here.
+
+---
+
+# 19. OBEX is a first-class subsystem
+
+We have:
+
+```
+DSIObexAuthentication
+```
+
+and:
+
+```
+hmi_App_Obex_Main
+hmi_App_Obex_DSI
+hmi_App_Obex_HMI
+```
+
+Therefore the MHI2 architecture has an explicit OBEX layer around Bluetooth data services.
+
+This is consistent with the expected MAP/PBAP-style object-transfer architecture, but the exact profile-to-OBEX call graph still needs binary-level tracing.
+
+---
+
+# 20. SPP
+
+I have **not found sufficient MHI2-specific evidence yet to state that SPP is actively exposed in production**.
+
+The generic QNX CAR platform supports SPP, but that is external platform documentation, not proof that this MU0678 configuration exposes it. [QNX](https://www.qnx.com/download/download/26204/QNX_CAR_Architecture_Guide.pdf?utm_source=chatgpt.com)
+
+So I am deliberately marking:
+
+```
+SPP = not yet proven for this production configuration
+```
+
+rather than copying the generic QNX capability list into the MHI2 map.
+
+---
+
+# 21. The Bluetooth/WLAN silicon boundary
+
+This is particularly interesting because it connects directly to the wireless work we just completed.
+
+The firmware contains:
+
+```
+/var/FwImage/
+    sd8787_uapsta.bin
+    w8787_wlan_SDIO_bt_SDIO.bin
+```
+
+The second filename explicitly identifies:
+
+```
+8787
+WLAN
+SDIO
+BT
+SDIO
+```
+
+The WLAN startup/reset mechanism uses:
+
+```
+io-sdiorm-mib2
+```
+
+and:
+
+```
+mvload
+```
+
+The Bluetooth stack waits for:
+
+```
+/tmp/mvloaded
+```
+
+before starting.
+
+And the BT recovery script literally says:
+
+```
+Resetting BT/Wifi chip.
+```
+
+It then kills the WLAN/BT-related infrastructure, kills `io-sdiorm-mib2`, restarts it, waits for `/dev/sdio0`, reloads:
+
+```
+/mnt/app/var/FwImage
+```
+
+and remounts:
+
+```
+devnp-mrvl_wlan-sdiorm.so
+```
+
+That establishes a very strong hardware relationship:
+
+```
+                 MHI2
+                   │
+                   ▼
+             io-sdiorm-mib2
+                   │
+                   ▼
+                SDIO
+                   │
+             ┌─────┴─────┐
+             │           │
+            WLAN          BT
+             │           │
+             └─────┬─────┘
+                   ▼
+             8787 firmware
+```
+
+I would **not yet claim the exact internal HCI transport implementation**, but the shared controller/firmware/reset architecture is directly evidenced.
+
+---
+
+# 22. The BT reset path is completely mapped
+
+`reset_bt.sh` is especially valuable.
+
+It performs:
+
+```
+kill wpa_supplicant
+        │
+        ▼
+kill DHCP client for mlan0
+        │
+        ▼
+destroy uap*
+destroy mlan*
+destroy wfd*
+        │
+        ▼
+kill io-sdiorm-mib2
+        │
+        ▼
+restart io-sdiorm-mib2
+        │
+        ▼
+wait for /dev/sdio0
+        │
+        ▼
+mvload firmware
+        │
+        ▼
+mount devnp-mrvl_wlan-sdiorm
+        │
+        ▼
+recreate uap0
+        │
+        ▼
+recreate mlan0
+```
+
+So the reset is actually a **combined BT/WLAN controller reset**, not merely restarting a Bluetooth daemon.
+
+That means a Bluetooth stack failure can cause the entire shared WLAN/BT controller infrastructure to be torn down and reloaded.
+
+That is a significant architectural fact.
+
+---
+
+# 23. There is a lab HCI bridge — but it is NOT production evidence
+
+We also found:
+
+```
+mfgbridge_init.conf
+```
+
+which contains:
+
+```
+BT_interface_name="hci0"
+Serial="/dev/ttyS0"
+BAUD=115200
+Protocol="TCP"
+```
+
+and:
+
+```
+WLAN_interface_name="mlan0"
+```
+
+This is useful because it demonstrates a development/manufacturing bridge with an HCI interface.
+
+**But I am explicitly not using this to claim that production Bluetooth uses&#x20;****`/dev/ttyS0`****&#x20;or&#x20;****`hci0`****.**
+
+The file is a Labtool-Bridge configuration and even points to:
+
+```
+mrvl/usb8782.bin
+```
+
+which does not match the production 8787 SDIO firmware architecture.
+
+Therefore:
+
+```
+hci0 / ttyS0
+```
+
+is **lab evidence only**, not production transport evidence.
+
+That distinction matters.
