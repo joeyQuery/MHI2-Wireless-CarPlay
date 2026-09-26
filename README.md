@@ -375,51 +375,32 @@ How does the Bluetooth/iAP2 bootstrap become associated with the Wi-Fi/AirPlay s
 | **[Wi-Fi](docs/wifi.md)** | Marvell WLAN, AP, uap0, connectionmanager, uaputl, DHCP/DNS, PF and coexistence |
 | **[AirPlay](docs/airplay.md)** | AirPlay receiver, mDNS/Bonjour and interface selection |
 | **[CarPlay](docs/carplay.md)** | DIO and the MHI2 CarPlay integration boundary |
-| **[Wireless Capability Breakdown](docs/wireless-capability-breakdown.md)** | Broader MHI2 wireless/connectivity findings |
+| **[Repository Status](STATUS.md)** | Current research state, blockers and evidence rules |
+| **[Roadmap](docs/roadmap.md)** | Dependency-oriented research and implementation roadmap |
+| **[Evidence Register](docs/evidence.md)** | Cross-project evidence ledger |
+| **[Disproven](docs/disproven.md)** | Eliminated interpretations and dead ends |
+| **[Binary Inventory](docs/binaries.md)** | Binary/process/library inventory and trace status |
+| **[Firmware Provenance](docs/firmware.md)** | Firmware baseline and provenance rules |
+| **[Glossary](docs/glossary.md)** | Canonical project terminology |
+| **[SSH Environment](docs/ssh-environment.md)** | Runtime investigation environment |
+| **[Call Graphs](docs/call-graphs/README.md)** | Function-level execution-trace structure |
+| **[Documentation Index](docs/README.md)** | Complete documentation map |
 
 ---
 
 # Roadmap
 
-## Understanding
+The detailed dependency-oriented roadmap is maintained in **[docs/roadmap.md](docs/roadmap.md)**.
 
-- [x] Map Marvell WLAN/BT hardware
-- [x] Map Wi-Fi/AP infrastructure
-- [x] Map Bluetooth infrastructure
-- [x] Identify iAP/iAP2 infrastructure
-- [x] Map AirPlay/mDNS infrastructure
-- [x] Identify DIO as the CarPlay integration boundary
-- [x] Map the existing USB CarPlay transport
-- [ ] Complete Bluetooth → iAP2 runtime trace
-- [ ] Resolve the enableIap gate
-- [ ] Resolve the DIO /dev/ipod0 transport dependency
-- [ ] Resolve MDNS_DIRECTLINK_IFACE consumption
-- [ ] Recover DIO → AirPlay interface/transport arguments
-- [ ] Complete end-to-end Wireless CarPlay trace
+Current phase:
 
-## Implementation
+- establish the exact Bluetooth → iAP2 path;
+- resolve the DIO `/dev/ipod0` transport boundary;
+- resolve `MDNS_DIRECTLINK_IFACE` consumption;
+- recover DIO → AirPlay interface/transport arguments;
+- correlate Bluetooth/iAP2 and Wi-Fi/AirPlay into one session.
 
-- [ ] Establish Wireless CarPlay Bluetooth bootstrap
-- [ ] Establish wireless iAP2 transport
-- [ ] Connect wireless iAP2 to DIO
-- [ ] Bind Wireless CarPlay networking to the correct MHI2 Wi-Fi interface
-- [ ] Connect Wi-Fi/mDNS to the existing AirPlay path
-- [ ] Achieve a working Wireless CarPlay session
-- [ ] Validate video
-- [ ] Validate audio
-- [ ] Validate HID/control
-- [ ] Validate reconnection
-
-## Documentation
-
-- [x] Document Wi-Fi architecture
-- [x] Document iAP2 architecture
-- [x] Document AirPlay architecture
-- [x] Document CarPlay integration
-- [x] Create master Wireless CarPlay architecture
-- [ ] Complete function-level call graphs
-- [ ] Document final implementation
-- [ ] Separate experimental work from stable implementation
+The repository deliberately does not mark Wireless CarPlay as implemented until those transport boundaries are supported by MHI2-specific evidence.
 
 ---
 
