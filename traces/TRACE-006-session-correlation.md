@@ -4,6 +4,8 @@
 
 ## Objective
 
+Establish whether Bluetooth bootstrap, Wi-Fi association, iAP2, mDNS and AirPlay events belong to the same production phone/session.
+
 ## Trace Record
 
 | Field | Current state |
@@ -17,7 +19,7 @@
 | Device / socket / file boundary | Bluetooth identity, Wi-Fi association/IP and AirPlay session identifiers must be joined |
 | Protocol event | HCI/iAP2/Wi-Fi/mDNS/AirPlay correlation required |
 | Runtime confirmation | Target only; no timestamp-correlated production session trace committed |
-| Evidence IDs | E-013 |
+| Evidence IDs | None — target trace; no completed correlation evidence yet |
 | Remaining uncertainty | Identity join across all transports and session lifecycle |
 
 Establish that Bluetooth bootstrap, Wi-Fi association, iAP2 events, mDNS discovery and AirPlay session creation belong to the same phone/session.
@@ -61,7 +63,6 @@ Correlate, from one controlled session:
 
 ## Related evidence
 
-- E-013 — Wireless CarPlay is not yet proven end-to-end
 
 ## Completion criterion
 
