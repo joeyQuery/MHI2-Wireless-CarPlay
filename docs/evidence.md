@@ -32,10 +32,8 @@ This is the central evidence ledger for the project. It prevents architectural d
 | E-009 | AirPlay exposes interface-selection helpers | Static | Proven | `libairplay.so` | Wi-Fi/USB-aware helpers present |
 | E-010 | DIO contains iAP2 and AirPlay/CarPlay integration symbols | Static | Proven | `dio_manager` | Exact call arguments still require tracing |
 | E-011 | WLAN/Bluetooth coexistence configuration exists | Static | Proven | `coex.cfg` / Wi-Fi docs | Does not prove CarPlay-specific tuning |
-| E-012 | `111` is the alternate AirPlay stream type | Protocol / controlled investigation | Proven | Existing AltScreen investigation; historical research | It does not itself contain display description; source artifact is not yet represented as a repository trace |
-| E-013 | `altScreen` is AirPlay feature negotiation rather than iAP2 Identify | Protocol / static | Proven | Existing AltScreen investigation; historical research | Keep separate from iAP2 capability negotiation; source artifact is not yet represented as a repository trace |
-| E-014 | `hci0` / `/dev/ttyS0` lab configuration is not production proof | Static comparison | Proven as limitation | `docs/bluetooth.md` | Do not use it as production HCI transport |
-| E-015 | Wireless CarPlay is not yet proven end-to-end | Cross-system | Proven | Current repository state | Target remains an investigation target |
+| E-012 | `hci0` / `/dev/ttyS0` lab configuration is not production proof | Static comparison | Proven as limitation | `docs/bluetooth.md` | Do not use it as production HCI transport |
+| E-013 | Wireless CarPlay is not yet proven end-to-end | Cross-system | Proven | Current repository state | Target remains an investigation target |
 
 ## Trace Cross-Reference
 
@@ -56,4 +54,4 @@ Use a stable new ID rather than silently rewriting an existing finding when evid
 
 ## Source Discipline
 
-Subsystem documents may explain findings in detail, but this register is the cross-project index of what the project currently treats as evidence. Repetition across documents does not upgrade an inference to proven status. For forensic findings, record the actual binary, configuration or trace artifact rather than citing only an architecture summary.
+Subsystem documents may explain findings in detail, but this register is the cross-project index of what the project currently treats as evidence. Repetition across documents does not upgrade an inference to proven status. For forensic findings, record the actual binary, configuration or trace artifact rather than citing only an architecture summary. If runtime evidence is not reproducible from a committed artifact, say so explicitly instead of presenting the observation as repository-reproducible.
