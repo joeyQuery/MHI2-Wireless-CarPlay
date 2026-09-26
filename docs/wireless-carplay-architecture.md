@@ -295,9 +295,9 @@ flowchart LR
     SOCKET["mDNS / socket setup"]
     AIRPLAY["libairplay.so"]
 
-    ENV --> CONSUMER
-    CONSUMER --> SOCKET
-    SOCKET --> AIRPLAY
+    ENV -.-> CONSUMER
+    CONSUMER -.-> SOCKET
+    SOCKET -.-> AIRPLAY
 ~~~
 
 The critical experiment is to locate the consumer and determine whether `uap0` is sufficient as the wireless CarPlay interface.
@@ -380,9 +380,8 @@ The current transport-boundary trace set is:
 All six are intentionally marked Partial or Target. None claims the unresolved wireless path is implemented.
 
 # 4. Component / Subsystem Breakdown
-# 4. Component / Subsystem Breakdown
 
-## 3.1 Marvell 8787 / SDIO
+## 4.1 Marvell 8787 / SDIO
 
 Relevant host components:
 
@@ -426,7 +425,7 @@ flowchart TB
     CHIP --> BT
 ~~~
 
-## 3.2 connectionmanager
+## 4.2 connectionmanager
 
 Relevant WLAN methods include:
 
@@ -464,7 +463,7 @@ flowchart LR
     UAPUTL --> FW
 ~~~
 
-## 3.3 uap0 / network services
+## 4.3 uap0 / network services
 
 ~~~mermaid
 flowchart TB
@@ -493,7 +492,7 @@ Known DHCP range:
 10.173.189.10 - 10.173.189.99
 ~~~
 
-## 3.4 bluetooth
+## 4.4 bluetooth
 
 Production configuration includes:
 
@@ -533,7 +532,7 @@ flowchart LR
 
 The exact call graph remains unresolved.
 
-## 3.5 btstack
+## 4.5 btstack
 
 Relevant configuration/trace facilities include:
 
@@ -553,7 +552,7 @@ CON_BTSTACK_HCICAPTURE
 
 These make HCI/L2CAP capture a high-value source for tracing the wireless bootstrap.
 
-## 3.6 iAP / iAP2
+## 4.6 iAP / iAP2
 
 Relevant components:
 
@@ -586,7 +585,7 @@ flowchart TB
 
 The key unresolved question is whether existing iAP2 components expose a reusable wireless transport boundary.
 
-## 3.7 carplay0 / USB networking
+## 4.7 carplay0 / USB networking
 
 The production USB network interface uses:
 
@@ -612,7 +611,7 @@ flowchart LR
 
 This is the network-side component Wireless CarPlay must no longer depend on.
 
-## 3.8 DIO Manager
+## 4.8 DIO Manager
 
 DIO is the central application integration boundary.
 
@@ -661,7 +660,7 @@ flowchart TB
     AIRPLAY --> SESSION
 ~~~
 
-## 3.9 mDNS / AirPlay
+## 4.9 mDNS / AirPlay
 
 AirPlay contains:
 
@@ -704,7 +703,7 @@ flowchart LR
 
 The existence of Wi-Fi-aware helpers is evidence that the library has interface-selection machinery; it does not prove MHI2 currently invokes it with `uap0`.
 
-## 3.10 AirPlay session media
+## 4.10 AirPlay session media
 
 ~~~mermaid
 flowchart TB
