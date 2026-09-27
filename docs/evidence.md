@@ -23,7 +23,7 @@ This is the central evidence ledger for the project. It prevents architectural d
 |---|---|---|---|---|---|
 | E-001 | Marvell 8787 provides the WLAN/BT platform | Static | Proven | `docs/wifi.md`, `docs/bluetooth.md` | Shared controller established |
 | E-002 | `uap0` exists as the AP interface | Static + runtime | Proven | `docs/wifi.md` | Known address `10.173.189.1/24` |
-| E-003 | `carplay0` is the USB-derived CarPlay network interface | Static + runtime | Proven | `docs/wifi.md`, `docs/carplay.md`, TRACE-003 | Created through `devnp-usbdnet.so`; downstream MDNS consumer remains unresolved |
+| E-003 | `carplay0` is the USB-derived CarPlay network interface | Static + runtime | Proven | `docs/wifi.md`, `docs/carplay.md`, TRACE-003 | Created through `devnp-usbdnet.so`; `mdnsd` has a proven direct-link consumer, while boot-time environment provenance and final socket binding remain unresolved |
 | E-004 | Production configuration contains `MDNS_DIRECTLINK_IFACE=carplay0` | Static | Proven | `docs/airplay.md`, `docs/wireless-carplay-architecture.md`, TRACE-003 | Configuration value is proven; `mdnsd` consumption is now proven, but boot-time environment propagation and final socket binding remain unresolved |
 | E-005 | Production CarPlay uses `/dev/ipod0` | Static + runtime | Proven | `docs/iap2.md`, TRACE-002 | Exact service/device-open path and transport abstraction remain unresolved |
 | E-006 | `enableIap=false` is present in production Bluetooth configuration | Static | Proven | `docs/bluetooth.md`, `docs/iap2.md` | Exact branch remains unresolved |
