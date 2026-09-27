@@ -60,6 +60,30 @@ A binary, library, configuration key or symbol being present establishes availab
 
 **Status:** Established project-wide evidence rule.
 
+## 9. AirPlay screen setter APIs are not the active production transport selector
+
+The production `libairplay.so` exports `AirPlayReceiverSessionScreen_SetIFName`, `AirPlayReceiverSessionScreen_SetTransportType` and `AirPlayReceiverSessionScreen_SetClientIfMACAddr`, but the implementations reduce to `bx lr`.
+
+**Status:** Disproven as the presumed active selector for this production build.
+
+**Evidence:** E-027; TRACE-004.
+
+## 10. `SocketSetBoundInterface` is not the active production binding mechanism
+
+The production entry is a tiny stub/constant-return. The substantive network helpers that remain relevant are `SocketSetPacketReceiveInterface` and `SocketSetMulticastInterface`.
+
+**Status:** Disproven as the presumed production binding mechanism.
+
+**Evidence:** E-019, E-020; TRACE-005.
+
+## 11. Bluetooth iAP endpoint is not proven to be `/dev/ipod0`
+
+DIO independently proves `/dev/ipod0` through its `iap2.device` configuration and `iap2_connect` callsites. The Bluetooth `iap` binary independently proves a runtime-supplied endpoint passed to `open64()`, and contains no `/dev/ipod0` literal.
+
+**Status:** Endpoint equality remains unproven; treating them as identical is eliminated as an assumption.
+
+**Evidence:** E-016, E-021, E-022, E-023; TRACE-001 and TRACE-002.
+
 ## Recording New Eliminations
 
 When an investigation disproves an interpretation:
