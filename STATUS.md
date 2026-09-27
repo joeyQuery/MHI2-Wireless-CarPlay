@@ -50,7 +50,8 @@ The target diagram describes the investigation target, not a completed implement
 9. What production activation branch connects the existing Bluetooth/Wi-Fi iAP2 machinery to the DIO CarPlay state machine?
 10. What concrete transport/device object is selected after the Bluetooth `CIapBTChannel` runtime endpoint reaches `open64()`?
 11. What callers reach `libiap2client.so::iap2_connect()`, and what QNX message/resource-manager destination do those calls address?
-12. How, if at all, can that Bluetooth-side iAP2 transport reach DIO when production DIO is configured for `/dev/ipod0`?
+12. Does the transport object/callback layer in `ipod-drvr-iap2.so` own or mediate either of those two boundaries?
+13. How, if at all, can that Bluetooth-side iAP2 transport reach DIO when production DIO is configured for `/dev/ipod0`?
 
 ## Evidence Rules
 
@@ -88,7 +89,7 @@ See [Evidence](docs/evidence.md) for the authoritative evidence register and [Di
 
 ## Trace State
 
-The repository now has ten explicit trace artifacts for the highest-value transport boundaries. TRACE-001, TRACE-003, TRACE-004 and TRACE-005 have gained concrete binary-level edges; TRACE-002 remains partial because the DIO transport adaptation point is unresolved; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated; TRACE-007 and TRACE-008 are partial, documenting compiled multi-transport iAP2 capability and the recovered iAP2 control-plane/DIO Bluetooth integration boundaries without proving production activation. TRACE-010 now isolates the iAP2 client/media-synchronizer boundary and the USB-specific NCM device-controller role, without proving a Bluetooth-to-DIO handoff. These documents must not be read as proof of the remaining runtime/session edges.
+The repository now has ten explicit trace artifacts for the highest-value transport boundaries. TRACE-001, TRACE-003, TRACE-004 and TRACE-005 have gained concrete binary-level edges; TRACE-002 remains partial because the DIO transport adaptation point is unresolved; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated; TRACE-007 and TRACE-008 are partial, documenting compiled multi-transport iAP2 capability and the recovered iAP2 control-plane/DIO Bluetooth integration boundaries without proving production activation. TRACE-010 now isolates the iAP2 client/media-synchronizer boundary and records `ipod-drvr-iap2.so` as the strongest architectural candidate for a common transport layer, while still leaving the Bluetooth-to-driver/DIO convergence edge unresolved. These documents must not be read as proof of the remaining runtime/session edges.
 
 ## Immediate Research State
 

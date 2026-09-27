@@ -311,7 +311,11 @@ Bluetooth CIapBTChannel
     -> DIO CIpodAP2Service / iAP2
 ~~~
 
-Do not substitute libiap2client.so, mss-ipodiap2.so or the NCM device-controller as this missing adaptation without a recovered caller/transport relationship.
+TRACE-007 now provides an important architectural correlation: `ipod-drvr-iap2.so` contains the strongest recovered generic iAP2 transport layer, with transport-owned callbacks and explicit Bluetooth/Wi-Fi/USB transport-component machinery. It is therefore the strongest **candidate common layer** between the independently recovered Bluetooth and DIO sides.
+
+That candidate status must not be promoted to a call edge. We have not recovered `CIapBTChannel -> ipod-drvr-iap2.so`, nor `libiap2client.so -> ipod-drvr-iap2.so`, nor a shared transport object/resource-manager endpoint. The actual convergence point remains unresolved.
+
+Do not substitute `libiap2client.so`, `mss-ipodiap2.so` or the NCM device-controller as this missing adaptation without a recovered caller/transport relationship.
 
 # 3. Component / Subsystem Breakdown
 
@@ -331,7 +335,9 @@ No transport semantics should be assigned without binary evidence.
 
 ## 3.2 ipod-drvr-iap2.so
 
-Production USB/iPod-side iAP2 component.
+The MU0678 binary contains the strongest recovered generic iAP2 transport abstraction in this investigation. `link_create()` reaches `transport_get_link_params()`, `link_send_probe()` reaches `transport_send_pkt()`, and receive/send wrappers dispatch through transport-owned callbacks. The same binary contains Bluetooth, Wi-Fi, USB device/host and serial transport-component Identify handlers.
+
+This makes the driver the current architectural candidate for the common transport layer, but its production relationship to the Bluetooth `CIapBTChannel` endpoint and DIO's `iap2_connect()` destination remains untraced.
 
 Correlate it with:
 

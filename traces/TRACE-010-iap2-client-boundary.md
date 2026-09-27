@@ -65,6 +65,37 @@ iap2cli links against libiap2client.so.1 and uses iap2_connect(). Its command-li
 
 Thus /dev/ipod0 is a concrete client-side iAP2 device convention in the shipped image. This does not establish that every iap2_connect() call is hard-coded to /dev/ipod0, nor does it establish that the Bluetooth CIapBTChannel endpoint equals /dev/ipod0.
 
+### 5. Cross-trace correlation: ipod-drvr-iap2.so is the common architectural candidate, not a recovered convergence edge
+
+TRACE-007 establishes that `ipod-drvr-iap2.so` contains a genuine transport callback layer (`transport_get_link_params`, `transport_send_pkt`, `transport_receive`, `transport_recv_pkt`) and separate Bluetooth, Wi-Fi and USB transport-component identification machinery. The Wi-Fi descriptor also advertises `TransportSupportsCarPlay`; the Bluetooth descriptor advertises `TransportSupportsiAP2Connection`.
+
+This makes `ipod-drvr-iap2.so` the strongest **architectural candidate** for the common iAP2 transport layer between the separately recovered Bluetooth and DIO sides. It does **not** recover a caller/callee edge between `CIapBTChannel` and `ipod-drvr-iap2.so`, nor does it prove that `libiap2client.so` reaches the same transport object.
+
+The evidence-backed separation is therefore:
+
+```text
+Bluetooth side                         DIO / USB side
+-------------                          -------------
+CIapBTChannel                          CIpodAP2Service
+    |                                      |
+    v                                      v
+open64(runtime endpoint)               iap2_connect()
+    |                                      |
+    v                                      v
+Bluetooth iAP2 endpoint              libiap2client.so
+    |                                      |
+    +---------- unresolved ---------------+
+                         |
+                         X  no recovered convergence edge
+                         |
+                ipod-drvr-iap2.so
+                generic transport layer
+```
+
+The position of `ipod-drvr-iap2.so` in that diagram is a research target derived from its proven generic transport machinery, not a claimed execution edge.
+
+**Evidence:** E-032 through E-036, E-045 through E-048. See TRACE-007 and TRACE-010.
+
 ## Current trace
 
 ```text
@@ -114,7 +145,9 @@ The crossed edge is intentional: no binary evidence currently proves that the Bl
 2. Recover the QNX message destination/resource-manager path used by those client calls.
 3. Recover the CIpodAP2Service constructor/service setup and determine whether it directly calls the client library.
 4. Recover the Bluetooth iAP proxy endpoint publication path and compare its runtime endpoint with the DIO /dev/ipod0 path.
-5. Only then determine whether a transport-neutral adaptation point exists between Bluetooth iAP2 and DIO.
+5. Recover construction/initialization of the `ipod-drvr-iap2.so` transport object and the callback table supplying `transport_get_link_params`, `transport_send_pkt`, `transport_receive` and `transport_recv_pkt`.
+6. Compare that transport object/boundary with both the Bluetooth `open64()` endpoint and the DIO `iap2_connect()` QNX destination.
+7. Only then determine whether a transport-neutral adaptation point exists between Bluetooth iAP2 and DIO.
 
 ## Do not infer
 
