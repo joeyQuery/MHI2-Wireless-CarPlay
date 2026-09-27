@@ -199,14 +199,17 @@ flowchart LR
     CONFIG --> CONSUMER --> IFACE --> SOCKET --> AIRPLAY
 ~~~
 
-## 2.2 DIO → AirPlay screen configuration
+## 2.2 DIO → AirPlay interface configuration
 
-Trace callers of:
+The screen setter exports are production no-ops and are not the active adaptation target.
+
+Trace instead:
 
 ~~~text
-AirPlayReceiverSessionScreen_SetIFName
-AirPlayReceiverSessionScreen_SetTransportType
-AirPlayReceiverSessionScreen_SetClientIfMACAddr
+where AirPlay interfaceName is populated
+SocketSetPacketReceiveInterface
+SocketSetMulticastInterface
+IsWiFiNetworkInterface
 ~~~
 
 Record:
@@ -341,7 +344,7 @@ Exact MHI2 callback/media ownership remains to be mapped.
 
 ## 3.4 Screen interface configuration
 
-Critical APIs:
+The production exports:
 
 ~~~text
 AirPlayReceiverSessionScreen_SetIFName
@@ -349,9 +352,29 @@ AirPlayReceiverSessionScreen_SetTransportType
 AirPlayReceiverSessionScreen_SetClientIfMACAddr
 ~~~
 
-These are the primary candidates for the USB → Wi-Fi adaptation boundary.
+are no-op stubs and are therefore retired as candidates for the active USB → Wi-Fi adaptation boundary.
 
-No patch should be made until the DIO caller and current values are known.
+The recovered interface-selection path is instead:
+
+~~~text
+AirPlay object
+  +0x6c interfaceName
+        ↓
+if_nametoindex()
+        ↓
+DNSServiceRegister(..., interfaceIndex, ...)
+~~~
+
+The active investigation targets are:
+
+~~~text
+where interfaceName is populated
+SocketSetPacketReceiveInterface()
+SocketSetMulticastInterface()
+IsWiFiNetworkInterface()
+~~~
+
+The callers, arguments and final socket/interface binding remain unresolved. No patch should be made until those values and call paths are recovered.
 
 ## 3.5 Socket interface selection
 
