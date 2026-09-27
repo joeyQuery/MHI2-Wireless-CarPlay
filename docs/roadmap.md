@@ -26,6 +26,15 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 
 **Dependency:** Bluetooth/iAP2 work must establish the real transport boundary before implementation changes are selected.
 
+
+## 2.1 MU0678 iAP2 transport-capability finding
+
+The MU0678 ipod-drvr-iap2.so binary contains generic transport callbacks plus compiled Bluetooth and Wi-Fi transport identification. The Wi-Fi transport descriptor explicitly carries iAP2-connection and CarPlay capability fields.
+
+The shipped /etc/mm/iap2.cfg nevertheless selects Lightning Connector and leaves the Bluetooth section commented out.
+
+The investigation boundary is therefore narrowed: the driver demonstrably has a wireless transport model, but the production wireless transport object/callback implementation, selection mechanism, and DIO handoff are still unresolved.
+
 ## 3. DIO iAP2 Boundary
 
 - [ ] Trace `CIpodAP2Service`
@@ -119,11 +128,3 @@ process → library → function → IPC/transport → device/socket → protoco
 
 with each important edge backed by an evidence-register entry.
 
-
-## 2.1 MU0678 iAP2 transport-capability finding
-
-The MU0678 ipod-drvr-iap2.so binary contains generic transport callbacks plus compiled Bluetooth and Wi-Fi transport identification. The Wi-Fi transport descriptor explicitly carries iAP2-connection and CarPlay capability fields.
-
-The shipped /etc/mm/iap2.cfg nevertheless selects Lightning Connector and leaves the Bluetooth section commented out.
-
-The investigation boundary is therefore narrowed: the driver demonstrably has a wireless transport model, but the production wireless transport object/callback implementation, selection mechanism, and DIO handoff are still unresolved.
