@@ -53,6 +53,16 @@ This is the central evidence ledger for the project. It prevents architectural d
 | E-030 | `mdnsd` has dedicated direct-link interface registration handling | Static / Disassembly | Proven | `mdnsd` | `SetupInterfaceList()` feeds interfaces into `SetupOneInterface()`, which retains the interface name and registers the interface with the mDNS platform |
 | E-031 | Production boot-time export of `MDNS_DIRECTLINK_IFACE=carplay0` into `mdnsd` remains unproven | Static limitation | Not yet proven | `dio_manager` configuration metadata + `mdnsd` | The value exists in production configuration, and `mdnsd` consumes the environment variable, but no recovered boot-time `putenv()`/environment-propagation edge proves the running daemon receives it |
 
+
+
+| E-032 | MU0678 iAP2 driver contains a generic transport callback layer | Static / Disassembly | Proven | ipod-drvr-iap2.so | link_create() calls transport_get_link_params(); transport_send_pkt(), transport_receive() and transport_recv_pkt() dispatch through transport-owned callback fields |
+| E-033 | MU0678 iAP2 driver has separate Bluetooth and Wi-Fi transport-component Identify handlers | Static / Disassembly | Proven | ipod-drvr-iap2.so | ident_info_tspbt() and ident_info_tspwifi() exist, and ident_info_funcs contains entries for both |
+| E-034 | Wi-Fi transport component advertises iAP2 and CarPlay capability fields | Static / Data structures | Proven | ipod-drvr-iap2.so | sparams_id_info_wifitspcomp contains TransportComponentName, TransportSupportsiAP2Connection, and TransportSupportsCarPlay descriptors |
+| E-035 | Bluetooth transport component advertises iAP2 and Bluetooth MAC-related fields | Static / Data structures | Proven | ipod-drvr-iap2.so | sparams_id_info_tspbt contains TransportComponentName, TransportSupportsiAP2Connection, and BluetoothTransportMediaAccessControlAddress descriptors |
+| E-036 | Shipped MU0678 iAP2 configuration selects a Lightning/USB transport and comments out Bluetooth configuration | Static / Configuration | Proven | /etc/mm/iap2.cfg | [transport] is name=Lightning Connector; the [bluetooth] section is commented out; this is production configuration evidence, not proof that compiled wireless transport code is absent |
+| E-037 | Stock smartphone integration monitors /dev/ipod0 and launches DIO as its CarPlay child | Static / Configuration | Proven | smartphone_integrator.json | paths.mcdMonitored=[/dev/ipod0]; child carplay executes dio_manager; shipped smartphone orchestration is USB-device-driven |
+| E-038 | The production mDNS preparation script does not export MDNS_DIRECTLINK_IFACE | Static / Script | Proven negative | /etc/scripts/mdnsd.sh | The script only recreates/chmods /var/run/mdnsd; no environment assignment or export is present |
+
 ## Trace Cross-Reference
 
 The transport-boundary traces are maintained under [`traces/`](../traces/README.md). A trace may only strengthen an evidence entry when its underlying observation is actually recovered; the trace status itself is not evidence.
@@ -73,11 +83,3 @@ Use a stable new ID rather than silently rewriting an existing finding when evid
 ## Source Discipline
 
 Subsystem documents may explain findings in detail, but this register is the cross-project index of what the project currently treats as evidence. Repetition across documents does not upgrade an inference to proven status. For forensic findings, record the actual binary, configuration or trace artifact rather than citing only an architecture summary. If runtime evidence is not reproducible from a committed artifact, say so explicitly instead of presenting the observation as repository-reproducible.
-
-| E-032 | MU0678 iAP2 driver contains a generic transport callback layer | Static / Disassembly | Proven | ipod-drvr-iap2.so | link_create() calls transport_get_link_params(); transport_send_pkt(), transport_receive() and transport_recv_pkt() dispatch through transport-owned callback fields |
-| E-033 | MU0678 iAP2 driver has separate Bluetooth and Wi-Fi transport-component Identify handlers | Static / Disassembly | Proven | ipod-drvr-iap2.so | ident_info_tspbt() and ident_info_tspwifi() exist, and ident_info_funcs contains entries for both |
-| E-034 | Wi-Fi transport component advertises iAP2 and CarPlay capability fields | Static / Data structures | Proven | ipod-drvr-iap2.so | sparams_id_info_wifitspcomp contains TransportComponentName, TransportSupportsiAP2Connection, and TransportSupportsCarPlay descriptors |
-| E-035 | Bluetooth transport component advertises iAP2 and Bluetooth MAC-related fields | Static / Data structures | Proven | ipod-drvr-iap2.so | sparams_id_info_tspbt contains TransportComponentName, TransportSupportsiAP2Connection, and BluetoothTransportMediaAccessControlAddress descriptors |
-| E-036 | Shipped MU0678 iAP2 configuration selects a Lightning/USB transport and comments out Bluetooth configuration | Static / Configuration | Proven | /etc/mm/iap2.cfg | [transport] is name=Lightning Connector; the [bluetooth] section is commented out; this is production configuration evidence, not proof that compiled wireless transport code is absent |
-| E-037 | Stock smartphone integration monitors /dev/ipod0 and launches DIO as its CarPlay child | Static / Configuration | Proven | smartphone_integrator.json | paths.mcdMonitored=[/dev/ipod0]; child carplay executes dio_manager; shipped smartphone orchestration is USB-device-driven |
-| E-038 | The production mDNS preparation script does not export MDNS_DIRECTLINK_IFACE | Static / Script | Proven negative | /etc/scripts/mdnsd.sh | The script only recreates/chmods /var/run/mdnsd; no environment assignment or export is present |
