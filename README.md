@@ -1,5 +1,7 @@
 # MHI2 Wireless CarPlay
 
+[**Plain English**](docs/plain-english.md) · **Technical English**
+
 Reverse engineering MHI2 and CarPlay to understand and develop **Wireless Apple CarPlay** on **supported Audi MHI2 units**.
 
 > **Status:** Research / reverse engineering  
@@ -152,7 +154,7 @@ The Bluetooth configuration contains:
 enableIap=false
 ~~~
 
-The gate is now known to sit above a substantial existing Bluetooth iAP implementation. Active-device callbacks reach `CIapBTChannel::updateiAPDevice()`, and the runtime-supplied endpoint reaches `open64()`. The exact `enableIap` branch and endpoint value remain open.
+The production configuration contains `enableIap=false` while substantial Bluetooth iAP/iAP2 implementation exists in the image. The exact functionality controlled by `enableIap` remains unresolved. Active-device callbacks reach `CIapBTChannel::updateiAPDevice()`, and the runtime-supplied endpoint reaches `open64()`; the endpoint value itself remains unresolved.
 
 See **[Bluetooth](docs/bluetooth.md)** and **[iAP2](docs/iap2.md)**.
 
