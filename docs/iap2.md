@@ -257,14 +257,15 @@ name=Lightning Connector
 id=1234
 ~~~
 
-and its Bluetooth configuration section is commented out.
+and its separate `[bluetooth]` section is commented out. The file itself describes `[bluetooth]` as **Bluetooth Connection Status** handling, not as the transport selector; it includes `connectstatus` and `mac`, with `IAP2_BT_STATUS_MAC_ADDR` taking precedence. Therefore the commented block cannot be treated as evidence that Bluetooth iAP2 transport is disabled.
 
 Therefore:
 
 ~~~text
-compiled wireless transport capability = Proven
-production wireless packet transport     = Unproven
-enableIap=true is sufficient             = Unproven
+compiled wireless transport capability            = Proven
+production wireless packet transport              = Unproven
+Bluetooth transport disabled by [bluetooth] block = Not established
+enableIap activation semantics                     = Unproven
 ~~~
 
 See TRACE-007 and evidence E-032 through E-036.

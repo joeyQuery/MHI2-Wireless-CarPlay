@@ -87,17 +87,17 @@ name=Lightning Connector
 id=1234
 ~~~
 
-The [bluetooth] section is commented out, including its enable/id/name/connect-status fields.
+The same file separately documents `[bluetooth]` as **Bluetooth Connection Status** handling. Its commented fields are `enable`, `id`, `name`, `connectstatus` and `mac`, and the comment states that `IAP2_BT_STATUS_MAC_ADDR` is checked first. This section is therefore not the iAP2 transport selector.
 
-Therefore the shipped configuration is USB/Lightning-oriented even though the binary contains wireless transport capability machinery.
+The shipped configuration does select Lightning Connector in `[transport]`, but the commented Bluetooth connection-status block cannot be used as proof that the compiled Bluetooth iAP2 transport is disabled. The production wireless transport-selection/activation path remains unresolved.
 
 The correct evidence classification is:
 
 ~~~text
-compiled wireless iAP2 capability      = Proven
-production wireless iAP2 execution     = Unproven
-enableIap=true is sufficient            = Unproven
-DIO accepts wireless transport directly = Unproven
+compiled wireless iAP2 capability          = Proven
+production wireless iAP2 execution         = Unproven
+Bluetooth transport disabled by [bluetooth] = Not established
+DIO accepts wireless transport directly    = Unproven
 ~~~
 
 ## Current trace
