@@ -85,6 +85,12 @@ mdnsd
 
 The configuration value itself is proven. The downstream chain is not.
 
+## Additional recovered negative
+
+The production /etc/scripts/mdnsd.sh script only recreates and chmods /var/run/mdnsd. It contains no environment assignment/export for MDNS_DIRECTLINK_IFACE. This rules out that script as the recovered boot-time producer, but does not identify the actual producer elsewhere in the boot/configuration chain.
+
+**Evidence:** E-038.
+
 ## Evidence
 
 - E-028 — `libairplay` DNS-SD calls form the AirPlay → `libdns_sd` boundary
