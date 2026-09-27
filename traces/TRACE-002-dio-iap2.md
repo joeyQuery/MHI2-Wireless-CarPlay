@@ -112,3 +112,32 @@ The Bluetooth endpoint recovered in TRACE-001 must **not** be treated as `/dev/i
 ## Decision gate
 
 Do not modify DIO or replace `/dev/ipod0` until the actual transport boundary is recovered.
+
+
+## Newly recovered iAP2 transport boundary
+
+The MU0678 ipod-drvr-iap2.so binary materially changes the interpretation of the DIO/iAP2 boundary.
+
+The driver contains a generic transport dispatch layer:
+
+~~~text
+link_create()
+ |
+ +--> transport_get_link_params()
+
+link_send_probe()
+ |
+ +--> transport_send_pkt()
+
+transport_receive()
+ |
+ +--> transport-owned callback
+~~~
+
+It also contains separate Identify handlers for Bluetooth, Wi-Fi, USB device/host and serial transport components. The Wi-Fi descriptor contains TransportSupportsiAP2Connection and TransportSupportsCarPlay; the Bluetooth descriptor contains TransportSupportsiAP2Connection and BluetoothTransportMediaAccessControlAddress.
+
+This proves that the iAP2 driver has a real multi-transport capability model. It does not prove that DIO can directly consume a wireless transport.
+
+The shipped /etc/mm/iap2.cfg selects Lightning Connector, so the current production configuration remains USB-oriented despite the compiled wireless capability.
+
+**Evidence:** E-032, E-033, E-034, E-035, E-036.
