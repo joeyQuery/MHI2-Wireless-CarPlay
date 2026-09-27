@@ -85,7 +85,7 @@ See [Evidence](docs/evidence.md) for the authoritative evidence register and [Di
 
 ## Trace State
 
-The repository now has explicit trace artifacts for the six highest-value transport boundaries. TRACE-001, TRACE-003, TRACE-004 and TRACE-005 have gained concrete binary-level edges; TRACE-002 remains partial because the DIO transport adaptation point is unresolved; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated. These documents must not be read as proof of the remaining runtime/session edges.
+The repository now has eight explicit trace artifacts for the highest-value transport boundaries. TRACE-001, TRACE-003, TRACE-004 and TRACE-005 have gained concrete binary-level edges; TRACE-002 remains partial because the DIO transport adaptation point is unresolved; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated; TRACE-007 and TRACE-008 are partial, documenting compiled multi-transport iAP2 capability and the recovered iAP2 control-plane/DIO Bluetooth integration boundaries without proving production activation. These documents must not be read as proof of the remaining runtime/session edges.
 
 ## Immediate Research State
 
