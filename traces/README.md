@@ -25,6 +25,7 @@ No target arrow is evidence by itself.
 | [TRACE-007](TRACE-007-iap2-multitransport.md) | MU0678 iAP2 multi-transport capability | Partial |
 | [TRACE-008](TRACE-008-iap2-control-plane.md) | MU0678 iAP2 control plane / DIO Bluetooth integration | Partial |
 | [TRACE-009](TRACE-009-iap2-ncm-usb-boundary.md) | MU0678 iAP2-NCM / USB CarPlay boundary | Partial |
+| [TRACE-010](TRACE-010-iap2-client-boundary.md) | MU0678 iAP2 client / media-synchronizer boundary | Partial |
 
 ## Trace record format
 
