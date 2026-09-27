@@ -63,6 +63,16 @@ Correlate, from one controlled session:
 
 ## Related evidence
 
+The following entries provide subsystem context only; they do **not** prove that the events belong to the same phone or production session:
+
+- E-021 — Bluetooth active-device callback reaches `CIapBTChannel::updateiAPDevice()`.
+- E-022 — Bluetooth iAP endpoint reaches `open64()`.
+- E-026 — AirPlay Bonjour registration uses its `interfaceName` field to select an interface index.
+- E-029 — `mdnsd` explicitly consumes `MDNS_DIRECTLINK_IFACE`.
+- E-042 — DIO contains a Bluetooth smartphone integration boundary with explicit CarPlay mode handling.
+
+These contextual findings identify the subsystem boundaries that a future timestamp-correlated session trace must join; none establishes the required cross-transport identity correlation.
+
 
 ## Completion criterion
 
