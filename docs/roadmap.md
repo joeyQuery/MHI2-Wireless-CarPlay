@@ -18,6 +18,8 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 
 - [ ] Resolve `enableIap` parsing and control flow
 - [ ] Trace `bluetooth` → Bluetooth iAP proxy
+- [x] Trace Bluetooth active-device → iAP endpoint creation boundary
+- [ ] Resolve the exact runtime endpoint path returned by `IapDeviceServices`
 - [ ] Trace Bluetooth iAP → iAP2 transport creation
 - [ ] Identify the production HCI transport used by the relevant path
 - [ ] Trace iAP2 callbacks/events into DIO
@@ -36,20 +38,27 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 
 ## 4. Wi-Fi / mDNS / AirPlay
 
-- [ ] Find every consumer of `MDNS_DIRECTLINK_IFACE`
-- [ ] Trace interface selection from configuration to socket setup
-- [ ] Trace DIO → AirPlay interface/transport setters
-- [ ] Recover `SetIFName` argument
-- [ ] Recover `SetTransportType` argument
-- [ ] Recover `SetClientIfMACAddr` argument
-- [ ] Determine whether AirPlay can operate on `uap0` without modification
+- [x] Identify the `mdnsd` consumer of `MDNS_DIRECTLINK_IFACE`
+- [ ] Prove how the production boot path exports `MDNS_DIRECTLINK_IFACE=carplay0` into the running `mdnsd` environment
+- [x] Trace `MDNS_DIRECTLINK_IFACE` through `mdnsd::SetupOneInterface()`
+- [ ] Trace final interface selection from mDNS/AirPlay into socket setup
+- [x] Determine that the production screen interface/transport/client-MAC setters are no-op stubs
+- [ ] Trace the actual AirPlay interface-selection path
+- [x] Retire the three screen setters as the presumed active transport selector
+- [ ] Recover where the AirPlay object's `interfaceName` field is populated
+- [ ] Recover packet/multicast interface helper arguments
+- [ ] Determine whether the recovered `interfaceName`/socket path can operate on `uap0` without modification
 - [ ] Correlate mDNS discovery with DIO session events
 
 **Dependency:** Interface-selection decisions should be based on the actual DIO/AirPlay call path, not on replacing `carplay0` by assumption.
 
+## 4.1 Newly recovered boundary state
+
+The highest-value transport unknowns have narrowed substantially. Bluetooth iAP now has a proven runtime endpoint handoff into `open64()`, while DIO independently proves `/dev/ipod0`; the endpoint equality is unresolved. AirPlay now has a proven Bonjour interface-index path and a real `libairplay` → DNS-SD → `mdnsd` boundary. The remaining mDNS unknown is environment provenance, not consumer identity.
+
 ## 5. Session Correlation
 
-- [ ] Correlate Bluetooth/iAP2 phone identity with Wi-Fi association
+- [ ] Correlate Bluetooth/iAP2 phone identity with Wi-Fi association and the runtime Bluetooth endpoint
 - [ ] Correlate iAP2 events with DIO CarPlay request/state
 - [ ] Correlate mDNS/AirPlay discovery with the same DIO session
 - [ ] Establish one end-to-end timestamped Wireless CarPlay trace
