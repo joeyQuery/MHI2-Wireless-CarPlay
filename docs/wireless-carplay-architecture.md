@@ -589,6 +589,39 @@ flowchart TB
 
 The key unresolved question is whether existing iAP2 components expose a reusable wireless transport boundary.
 
+### 4.6.1 MU0678 multi-transport iAP2 boundary
+
+The MU0678 iAP2 driver adds an important constraint to the architecture map.
+
+~~~text
+ipod-drvr-iap2.so
+    |
+    +--> generic transport callbacks
+    |       +--> transport_get_link_params()
+    |       +--> transport_send_pkt()
+    |       +--> transport_receive()
+    |
+    +--> transport identification
+            +--> Bluetooth transport component
+            +--> Wi-Fi transport component
+            +--> USB device/host transport components
+~~~
+
+The Wi-Fi transport descriptor explicitly contains TransportSupportsiAP2Connection and TransportSupportsCarPlay. The Bluetooth descriptor contains TransportSupportsiAP2Connection and BluetoothTransportMediaAccessControlAddress.
+
+The shipped configuration nevertheless selects Lightning Connector.
+
+Therefore:
+
+~~~text
+compiled wireless transport capability = Proven
+production wireless transport selection = Unproven
+~~~
+
+The next implementation-relevant question is where the transport object/callback table is instantiated and which implementation is selected for a real wireless session.
+
+**Evidence:** E-032 through E-036. See TRACE-007.
+
 ## 4.7 carplay0 / USB networking
 
 The production USB network interface uses:
@@ -1111,36 +1144,3 @@ The architecture is fully traced only when the remaining transport boundaries ar
 
 
 ---
-
-# 10. Newly recovered iAP2 transport boundary
-
-The MU0678 iAP2 driver adds an important constraint to the architecture map.
-
-~~~text
-ipod-drvr-iap2.so
-    |
-    +--> generic transport callbacks
-    |       +--> transport_get_link_params()
-    |       +--> transport_send_pkt()
-    |       +--> transport_receive()
-    |
-    +--> transport identification
-            +--> Bluetooth transport component
-            +--> Wi-Fi transport component
-            +--> USB device/host transport components
-~~~
-
-The Wi-Fi transport descriptor explicitly contains TransportSupportsiAP2Connection and TransportSupportsCarPlay. The Bluetooth descriptor contains TransportSupportsiAP2Connection and BluetoothTransportMediaAccessControlAddress.
-
-The shipped configuration nevertheless selects Lightning Connector.
-
-Therefore:
-
-~~~text
-compiled wireless transport capability = Proven
-production wireless transport selection = Unproven
-~~~
-
-The next implementation-relevant question is where the transport object/callback table is instantiated and which implementation is selected for a real wireless session.
-
-**Evidence:** E-032 through E-036. See TRACE-007.
