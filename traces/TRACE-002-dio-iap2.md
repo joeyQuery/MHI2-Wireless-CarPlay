@@ -140,4 +140,7 @@ This proves that the iAP2 driver has a real multi-transport capability model. It
 
 The shipped /etc/mm/iap2.cfg selects Lightning Connector, so the current production configuration remains USB-oriented despite the compiled wireless capability.
 
-**Evidence:** E-032, E-033, E-034, E-035, E-036.
+**Evidence:** E-032, E-033, E-034, E-035, E-036, E-037.
+
+
+The shipped smartphone_integrator configuration independently reinforces the USB-side boundary: it monitors /dev/ipod0 and defines its CarPlay child as dio_manager. This is orchestration evidence, not proof that wireless iAP2 cannot be integrated later.
