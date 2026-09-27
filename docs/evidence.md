@@ -65,6 +65,12 @@ This is the central evidence ledger for the project. It prevents architectural d
 
 | E-044 | MU0678 ships an explicit USB iAP2-NCM CarPlay device descriptor | Static / Configuration | Proven | `usblauncher_carplay_descriptor.lua` | Product is `iAP2 NCM Accessory`; descriptor combines a vendor-specific iAP interface with CDC Ethernet/NCM control and data interfaces. This establishes an explicit USB iAP2-NCM architecture; it does not prove the NCM component cannot be reused by another transport |
 
+
+| E-045 | MU0678 libiap2client.so exposes iAP2 client APIs but no recovered Bluetooth/Wi-Fi transport selector | Static / ELF imports/exports | Proven | armle/usr/lib/libiap2client.so | Exports iap2_connect/disconnect and related iAP2 APIs; imports MsgSend/MsgSendv/MsgSendsv/MsgSendvs plus open/close/ionotify; no Bluetooth, Wi-Fi, HCI or socket transport symbols were recovered |
+| E-046 | MU0678 mss-ipodiap2.so exposes the same core iAP2 client API surface | Static / ELF exports | Proven | armle/lib/dll/mss-ipodiap2.so | Exports iap2_connect/disconnect and related iAP2 APIs and identifies itself as an iPod iAP2 Media Synchronizer; exact caller/ownership boundary remains unresolved |
+| E-047 | MU0678 devu-iap2ncm-tegra3-ci.so is a ChipIdea USB device-controller implementation for an iAP2 NCM accessory | Static / ELF strings/exports | Proven | armle/lib/dll/devu-iap2ncm-tegra3-ci.so | Contains the ChipIdea USB controller implementation, io-usb-dcd -diap2ncm-tegra3-ci and an explicit iAP2 NCM accessory description; this does not establish wireless reuse |
+| E-048 | iap2cli uses /dev/ipod0 as its default iPod mountpoint while linking against libiap2client | Static / Strings/imports | Proven | armle/usr/bin/iap2cli | Help text specifies default /dev/ipod0 and the binary imports iap2_connect from libiap2client; this does not prove every iap2_connect call is hard-coded to /dev/ipod0 |
+
 ## Trace Cross-Reference
 
 The transport-boundary traces are maintained under [`traces/`](../traces/README.md). A trace may only strengthen an evidence entry when its underlying observation is actually recovered; the trace status itself is not evidence.
