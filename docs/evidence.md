@@ -63,6 +63,8 @@ This is the central evidence ledger for the project. It prevents architectural d
 | E-037 | Stock smartphone integration monitors /dev/ipod0 and launches DIO as its CarPlay child | Static / Configuration | Proven | smartphone_integrator.json | paths.mcdMonitored=[/dev/ipod0]; child carplay executes dio_manager; shipped smartphone orchestration is USB-device-driven |
 | E-038 | The production mDNS preparation script does not export MDNS_DIRECTLINK_IFACE | Static / Script | Proven negative | /etc/scripts/mdnsd.sh | The script only recreates/chmods /var/run/mdnsd; no environment assignment or export is present |
 
+| E-044 | MU0678 ships an explicit USB iAP2-NCM CarPlay device descriptor | Static / Configuration | Proven | `usblauncher_carplay_descriptor.lua` | Product is `iAP2 NCM Accessory`; descriptor combines a vendor-specific iAP interface with CDC Ethernet/NCM control and data interfaces. This establishes an explicit USB iAP2-NCM architecture; it does not prove the NCM component cannot be reused by another transport |
+
 ## Trace Cross-Reference
 
 The transport-boundary traces are maintained under [`traces/`](../traces/README.md). A trace may only strengthen an evidence entry when its underlying observation is actually recovered; the trace status itself is not evidence.
