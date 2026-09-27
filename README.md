@@ -152,7 +152,7 @@ The Bluetooth configuration contains:
 enableIap=false
 ~~~
 
-The exact effect of that gate and whether the existing Bluetooth iAP infrastructure can be used for Wireless CarPlay remain open trace targets.
+The gate is now known to sit above a substantial existing Bluetooth iAP implementation. Active-device callbacks reach `CIapBTChannel::updateiAPDevice()`, and the runtime-supplied endpoint reaches `open64()`. The exact `enableIap` branch and endpoint value remain open.
 
 See **[Bluetooth](docs/bluetooth.md)** and **[iAP2](docs/iap2.md)**.
 
@@ -184,7 +184,7 @@ It also references:
 _airplay._tcp.
 ~~~
 
-AirPlay therefore contains mechanisms for selecting network interfaces. The remaining question is what interface and transport information MHI2's DIO layer supplies to it at runtime.
+The production library's `_UpdateBonjourAirPlay` path now provides a concrete interface-selection edge: its `interfaceName` field is converted with `if_nametoindex()` and the resulting interface index is supplied to `DNSServiceRegister()`. The previously suspected screen setter APIs are production no-ops, so they are no longer treated as the presumed transport selector.
 
 See **[AirPlay](docs/airplay.md)**.
 
@@ -289,27 +289,17 @@ This must be resolved from the binary call path.
 
 ### 3. MDNS_DIRECTLINK_IFACE
 
-Where is:
+`mdnsd` is now proven to consume:
 
 ~~~text
-MDNS_DIRECTLINK_IFACE=carplay0
+MDNS_DIRECTLINK_IFACE
 ~~~
 
-read?
-
-Which process consumes it, and how does it become an actual socket/interface binding?
+through `getenv()` in `SetupOneInterface()`, with dedicated direct-link interface registration. What remains unproven is how the production boot path exports `MDNS_DIRECTLINK_IFACE=carplay0` into the running daemon and how that registered interface reaches final socket binding.
 
 ### 4. DIO → AirPlay interface selection
 
-What arguments does DIO currently pass to:
-
-~~~text
-AirPlayReceiverSessionScreen_SetIFName
-AirPlayReceiverSessionScreen_SetTransportType
-AirPlayReceiverSessionScreen_SetClientIfMACAddr
-~~~
-
-Recovering those values is more important than patching libairplay.so.
+The three exported screen interface/transport/client-MAC setters are production no-op stubs. The active path recovered so far is the AirPlay object's `interfaceName` → `if_nametoindex()` → `DNSServiceRegister()` path. The next trace is to recover where `interfaceName` is populated and how packet/multicast socket helpers consume the selected interface.
 
 ### 5. Wi-Fi / AirPlay convergence
 
@@ -341,6 +331,9 @@ How does the Bluetooth/iAP2 bootstrap become associated with the Wi-Fi/AirPlay s
 - libairplay.so contains Wi-Fi/USB interface-selection helpers.
 - libairplay.so exposes screen interface/transport configuration APIs.
 - DIO contains iAP2 and AirPlay/CarPlay integration functionality.
+- Bluetooth iAP active-device callbacks supply a runtime endpoint to `CIapBTChannel`, which reaches `open64()`.
+- AirPlay Bonjour registration converts its `interfaceName` to an interface index and passes it to `DNSServiceRegister()`.
+- `mdnsd` explicitly consumes `MDNS_DIRECTLINK_IFACE` via `getenv()` and has direct-link interface handling.
 
 ## Partially traced
 
