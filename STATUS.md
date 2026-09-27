@@ -39,14 +39,14 @@ The target diagram describes the investigation target, not a completed implement
 
 ## Highest-Value Open Questions
 
-1. What exact code path is controlled by `enableIap=false`?
-2. What is the Bluetooth → iAP2 runtime path?
-3. Is DIO's `/dev/ipod0` dependency transport-specific or intrinsic?
-4. Where is `MDNS_DIRECTLINK_IFACE=carplay0` consumed?
-5. What arguments does DIO pass to AirPlay interface/transport setters?
-6. How are Bluetooth/iAP2 and Wi-Fi/AirPlay associated with the same phone/session?
-7. Can the existing AirPlay implementation operate on `uap0` without modification?
-8. What exact runtime call graph connects session creation to the media/HMI paths?
+1. What exact code branch in `bluetooth` consumes `enableIap=false`?
+2. What exact endpoint path does `IapDeviceServices` return to `CIapBTChannel`?
+3. Does that Bluetooth endpoint equal DIO's `/dev/ipod0`, or is it a different resource-manager path?
+4. How does the production boot path export `MDNS_DIRECTLINK_IFACE=carplay0` into the running `mdnsd` environment?
+5. Where is the AirPlay object's `interfaceName` populated, and what runtime value does it hold?
+6. What callers/arguments drive the substantive AirPlay packet/multicast interface helpers?
+7. How are Bluetooth/iAP2 and Wi-Fi/AirPlay associated with the same phone/session?
+8. Can the recovered AirPlay/mDNS path operate on `uap0` without modification?
 
 ## Evidence Rules
 
@@ -84,7 +84,7 @@ See [Evidence](docs/evidence.md) for the authoritative evidence register and [Di
 
 ## Trace State
 
-The repository now has explicit trace artifacts for the six highest-value transport boundaries. TRACE-001 through TRACE-005 are partial because the critical function/argument/runtime edges are not yet recovered; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated. These documents must not be read as proof of the missing edges.
+The repository now has explicit trace artifacts for the six highest-value transport boundaries. TRACE-001, TRACE-003, TRACE-004 and TRACE-005 have gained concrete binary-level edges; TRACE-002 remains partial because the DIO transport adaptation point is unresolved; TRACE-006 remains a target because end-to-end identity correlation has not been demonstrated. These documents must not be read as proof of the remaining runtime/session edges.
 
 ## Immediate Research State
 
