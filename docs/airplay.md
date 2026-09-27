@@ -89,9 +89,10 @@ flowchart TB
     SCREEN --> IFNAME
     SCREEN --> TRANSPORT
     SCREEN --> MAC
-    IFNAME --> BOUND
-    IFNAME --> RX
-    IFNAME --> MCAST
+    SCREEN -.-> IFNAME
+    SCREEN -.-> TRANSPORT
+    SCREEN -.-> MAC
+    RX --> MCAST
 ~~~
 
 The library has explicit interface-selection machinery, but the apparent screen configuration exports are not the active selector in the production build. The recovered active Bonjour path uses the AirPlay object's `interfaceName` field.
@@ -142,8 +143,8 @@ flowchart LR
     PHONE <--> USB
     USB --> NCM
     NCM --> CARPLAY0
-    CARPLAY0 --> ENV
-    ENV --> AIRPLAY
+    CARPLAY0 -.-> ENV
+    ENV -.-> AIRPLAY
 ~~~
 
 ## 1.5 Wireless target
