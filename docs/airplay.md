@@ -94,9 +94,30 @@ flowchart TB
     IFNAME --> MCAST
 ~~~
 
-The library has explicit interface-selection machinery. The unresolved question is what MHI2 supplies at runtime.
+The library has explicit interface-selection machinery, but the apparent screen configuration exports are not the active selector in the production build. The recovered active Bonjour path uses the AirPlay object's `interfaceName` field.
 
-## 1.4 Current USB network path
+## 1.4 Recovered Bonjour interface-selection path
+
+In the production `libairplay.so`, `_UpdateBonjourAirPlay` reads an `interfaceName` field at `object + 0x6c`. If the field is non-empty, it calls `if_nametoindex(interfaceName)` and passes the resulting interface index to `DNSServiceRegister()`. If empty, the interface index is `0`.
+
+Therefore the recovered path is:
+
+```text
+AirPlay object
+  +0x6c interfaceName
+        ↓
+if_nametoindex()
+        ↓
+DNSServiceRegister(..., interfaceIndex, ...)
+```
+
+The production exports `AirPlayReceiverSessionScreen_SetIFName`, `SetTransportType` and `SetClientIfMACAddr` are no-op stubs, and `SocketSetBoundInterface` is a tiny stub/constant-return. They should not be treated as the active transport/interface adaptation point.
+
+The substantive lower-level helpers remain `SocketSetPacketReceiveInterface`, `SocketSetMulticastInterface` and `IsWiFiNetworkInterface`; their callers and arguments still require tracing.
+
+**Evidence:** E-018, E-019, E-026, E-027. See TRACE-004 and TRACE-005.
+
+## 1.5 Current USB network path
 
 Production:
 
@@ -216,6 +237,8 @@ Determine:
 - whether transport selection affects setup/security.
 
 ## 2.4 Bonjour registration
+
+The DNS-SD calls are now established as a real library/process boundary: `libairplay.so` calls `DNSServiceRegister`/related APIs through `libdns_sd.so`, with `mdnsd` providing the system mDNS implementation. See TRACE-003.
 
 Trace:
 
@@ -367,6 +390,9 @@ This is the AirPlay discovery/advertisement boundary.
 - AirPlay references _airplay._tcp.
 - AirPlay contains Wi-Fi/USB interface detection helpers.
 - AirPlay contains explicit interface-binding functions.
+- AirPlay Bonjour registration derives an interface index from its `interfaceName` field.
+- The production screen interface/transport/client-MAC setters are no-op stubs.
+- `SocketSetBoundInterface` is not the active production selector.
 - AirPlay exposes screen IFName/transport/client-MAC APIs.
 - Production CarPlay uses carplay0 for its direct-link network configuration.
 - carplay0 is created by USB NCM infrastructure.
@@ -382,12 +408,12 @@ This is the AirPlay discovery/advertisement boundary.
 
 ## Not yet proven
 
-- exact current IFName passed by DIO;
-- exact current transport type;
-- exact client-interface MAC;
-- whether uap0 is accepted without modification;
-- whether changing MDNS_DIRECTLINK_IFACE is sufficient;
-- whether libairplay.so itself requires patching.
+- where the AirPlay `interfaceName` field is populated;
+- callers/arguments of packet/multicast interface helpers;
+- boot-time propagation of `MDNS_DIRECTLINK_IFACE` into `mdnsd`;
+- whether the recovered interface path accepts `uap0` without modification;
+- whether changing `MDNS_DIRECTLINK_IFACE` is sufficient;
+- whether `libairplay.so` itself requires patching.
 
 ---
 
@@ -444,9 +470,9 @@ The word candidate is deliberate: the correct adaptation point may be DIO or Air
 
 # 7. Highest-Value Next Traces
 
-1. Find all MDNS_DIRECTLINK_IFACE consumers.
-2. Trace DIO calls to all screen-interface APIs.
-3. Recover current IFName / transport / MAC arguments.
+1. Prove the boot-time environment provenance of `MDNS_DIRECTLINK_IFACE` after the `mdnsd` consumer itself has been established.
+2. Recover where AirPlay `interfaceName` is populated.
+3. Trace callers and arguments of packet/multicast interface helpers.
 4. Trace IsWiFiNetworkInterface and IsUSBNetworkInterface.
 5. Trace socket interface binding.
 6. Trace Bonjour registration and TXT construction.
