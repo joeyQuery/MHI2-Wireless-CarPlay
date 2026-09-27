@@ -20,7 +20,7 @@ Determine whether DIO's iAP2 service is intrinsically tied to USB `/dev/ipod0` o
 | Protocol event | iAP2 event boundary not fully recovered |
 | Runtime confirmation | Production `/dev/ipod0` use is established; complete DIO→transport runtime path is not |
 | Evidence IDs | E-005, E-010, E-016 |
-| Remaining uncertainty | Transport abstraction versus intrinsic USB dependency |
+| Remaining uncertainty | Whether DIO can consume the separately recovered Bluetooth runtime endpoint or requires the `/dev/ipod0` service boundary |
 
 Determine whether DIO's iAP2 service is intrinsically tied to the USB `/dev/ipod0` device or consumes a transport abstraction.
 
@@ -49,7 +49,7 @@ The production configuration also contains the CIpodAP2Service messages:
 [CIpodAP2Service] ... Failed to connect to iAP2 driver at: "%s"
 ```
 
-This strengthens the production DIO-side USB boundary from component inventory to a recovered configuration value and dynamic-call boundary. It does not prove that DIO can or cannot consume the Bluetooth-side iAP transport.
+This strengthens the production DIO-side USB boundary from component inventory to a recovered configuration value and dynamic-call boundary. Separately, the Bluetooth `iap` binary now proves that its own iAP endpoint is runtime-supplied and passed to `open64()`. The two endpoints remain independent until the Bluetooth service's returned path is recovered and compared with `/dev/ipod0`.
 
 ## Established
 
@@ -104,6 +104,10 @@ The exact open/use sequence and whether `CIpodAP2Service` accepts an alternate t
 ## Required next trace
 
 Recover the constructor/service setup, device open/use operations, transport object or callbacks, error handling, and DIO session transition.
+
+## Cross-trace correction
+
+The Bluetooth endpoint recovered in TRACE-001 must **not** be treated as `/dev/ipod0` merely because both paths implement iAP2. DIO proves `/dev/ipod0`; Bluetooth proves a runtime-supplied path. The equality or difference is an unresolved cross-process fact.
 
 ## Decision gate
 
