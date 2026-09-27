@@ -75,7 +75,29 @@ flowchart LR
 
 The exact branch controlled by enableIap remains unresolved.
 
-## 1.4 DIO CarPlay boundary
+## 1.4 Bluetooth iAP runtime endpoint
+
+The production `iap` binary contains a dedicated `CIapBTChannel` implementation. The recovered path is:
+
+```text
+IapDeviceServices active-device callback
+        ↓
+CIapDeviceServicesReplyImpl::updateActiveDevices()
+        ↓
+CIapBTChannel::updateiAPDevice(...)
+        ↓
+CIapBTChannel::openiAPDevice()
+        ↓
+open64(runtime-supplied path)
+        ↓
+Bluetooth iAP2 endpoint
+```
+
+The endpoint is supplied at runtime through the Bluetooth service rather than being hard-coded in `iap`. No `/dev/ipod0` literal was found in `iap`. DIO independently uses `/dev/ipod0`; equality is unproven.
+
+**Evidence:** E-021, E-022, E-023. See TRACE-001.
+
+## 1.5 DIO CarPlay boundary
 
 Relevant DIO symbols include:
 
@@ -184,7 +206,7 @@ flowchart LR
     IAP --> DIO
 ~~~
 
-The exact Bluetooth protocol/channel used by the production image remains to be traced.
+The Bluetooth endpoint handoff is now proven at the `iap` binary boundary, but the exact Bluetooth protocol/channel and its handoff into DIO remain to be traced.
 
 ## 2.5 iAP2 → CarPlay
 
@@ -289,6 +311,8 @@ Trace its callers, exports, interfaces and registration path before modifying co
 - DIO contains explicit iAP2/CarPlay state-machine methods.
 - A Bluetooth iAP proxy library exists.
 - Production Bluetooth configuration has enableIap=false.
+- Bluetooth active-device callbacks provide a runtime endpoint to `CIapBTChannel`, which reaches `open64()`.
+- The Bluetooth endpoint is not proven to equal `/dev/ipod0`.
 - iAP2 NCM and other iAP2 components exist.
 
 ## Partially traced
