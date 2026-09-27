@@ -128,4 +128,15 @@ process → library → function → IPC/transport → device/socket → protoco
 
 with each important edge backed by an evidence-register entry.
 
-\n\n## 2.2 MU0678 iAP2 control-plane finding\n\n- [x] Establish executable Bluetooth iAP2 feature-startup machinery\n- [x] Establish shared iAP2 packet-dispatch handling for Bluetooth and Wi-Fi control events\n- [x] Establish accessory Wi-Fi configuration response fields\n- [x] Establish DIO Bluetooth Smartphone Integration / CarPlay control boundary\n- [ ] Prove production activation of these wireless paths\n- [ ] Correlate the selected iAP2 transport object with DIO\n\nThe new trace narrows the problem from capability discovery to production activation and handoff. These checkboxes do not imply a working Wireless CarPlay session. See TRACE-008 and E-039 through E-043.\n
+
+
+## 2.2 MU0678 iAP2 control-plane finding
+
+- [x] Establish executable Bluetooth iAP2 feature-startup machinery
+- [x] Establish shared iAP2 packet-dispatch handling for Bluetooth and Wi-Fi control events
+- [x] Establish accessory Wi-Fi configuration response fields
+- [x] Establish DIO Bluetooth Smartphone Integration / CarPlay control boundary
+- [ ] Prove production activation of these wireless paths
+- [ ] Correlate the selected iAP2 transport object with DIO
+
+The new trace narrows the problem from capability discovery to production activation and handoff. These checkboxes do not imply a working Wireless CarPlay session. See TRACE-008 and E-039 through E-043.

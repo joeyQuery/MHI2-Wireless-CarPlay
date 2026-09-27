@@ -22,7 +22,8 @@ No target arrow is evidence by itself.
 | [TRACE-004](TRACE-004-dio-airplay.md) | DIO → AirPlay | Partial |
 | [TRACE-005](TRACE-005-airplay-network.md) | AirPlay → socket/interface | Partial |
 | [TRACE-006](TRACE-006-session-correlation.md) | Bluetooth/Wi-Fi/session correlation | Target |
-| [TRACE-007](TRACE-007-iap2-multitransport.md) | MU0678 iAP2 multi-transport capability | Partial |\n| [TRACE-008](TRACE-008-iap2-control-plane.md) | MU0678 iAP2 control plane / DIO Bluetooth integration | Partial |
+| [TRACE-007](TRACE-007-iap2-multitransport.md) | MU0678 iAP2 multi-transport capability | Partial |
+| [TRACE-008](TRACE-008-iap2-control-plane.md) | MU0678 iAP2 control plane / DIO Bluetooth integration | Partial |
 
 ## Trace record format
 

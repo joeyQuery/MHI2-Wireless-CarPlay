@@ -1085,7 +1085,8 @@ SPP is **not currently proven as an active production capability** for this MHI2
 ```mermaid
 flowchart LR
     SPP["SPP"]
-    STATUS["Not yet proven\nfor production MHI2"]
+    STATUS["Not yet proven
+for production MHI2"]
 
     SPP -.-> STATUS
 ```
@@ -1688,4 +1689,32 @@ The objective is to replace every remaining assumption with a traceable fact.
 
 > **Trace it. Prove it. Document it.**
 
-\n\n---\n\n## 1.12 Wireless CarPlay-specific Bluetooth/iAP2 control plane\n\nThe MU0678 iAP2 driver is more than a static transport descriptor. Its executable feature-startup path contains Bluetooth update machinery:\n\n~~~text\niap2_start_features()\n    ├── bt_send_info()\n    └── bt_start_updates()\n~~~\n\nThe iAP2 packet dispatcher also directly handles Bluetooth and Wi-Fi control information:\n\n~~~text\nlink_handle_iap2pkt()\n    ├── bt_update_recv()\n    └── wifi_acc_config_info()\n~~~\n\nThe Wi-Fi side includes the accessory configuration exchange with SSID, passphrase, security type and channel fields.\n\nDIO independently contains `BluetoothSmartphoneIntegration`, `BluetoothSmartphoneIntegrationReply` and `CBluetoothController`, with explicit CarPlay mode/state handling and connection-preparation/reporting operations.\n\nThese findings establish a compiled Bluetooth/Wi-Fi iAP2 control plane and a DIO Bluetooth-smartphone control boundary. They do **not** prove that the shipped production configuration activates the complete Wireless CarPlay path.\n\n**Evidence:** E-039, E-040, E-041, E-042. See TRACE-008.\n
+
+
+---
+
+## 1.12 Wireless CarPlay-specific Bluetooth/iAP2 control plane
+
+The MU0678 iAP2 driver is more than a static transport descriptor. Its executable feature-startup path contains Bluetooth update machinery:
+
+~~~text
+iap2_start_features()
+    ├── bt_send_info()
+    └── bt_start_updates()
+~~~
+
+The iAP2 packet dispatcher also directly handles Bluetooth and Wi-Fi control information:
+
+~~~text
+link_handle_iap2pkt()
+    ├── bt_update_recv()
+    └── wifi_acc_config_info()
+~~~
+
+The Wi-Fi side includes the accessory configuration exchange with SSID, passphrase, security type and channel fields.
+
+DIO independently contains `BluetoothSmartphoneIntegration`, `BluetoothSmartphoneIntegrationReply` and `CBluetoothController`, with explicit CarPlay mode/state handling and connection-preparation/reporting operations.
+
+These findings establish a compiled Bluetooth/Wi-Fi iAP2 control plane and a DIO Bluetooth-smartphone control boundary. They do **not** prove that the shipped production configuration activates the complete Wireless CarPlay path.
+
+**Evidence:** E-039, E-040, E-041, E-042. See TRACE-008.
