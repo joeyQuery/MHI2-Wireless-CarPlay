@@ -269,6 +269,24 @@ enableIap=true is sufficient             = Unproven
 
 See TRACE-007 and evidence E-032 through E-036.
 
+## 2.8 MU0678 USB iAP2-NCM boundary
+
+The MU0678 dump contains an explicit USB CarPlay device descriptor whose product is:
+
+~~~text
+product = 'iAP2 NCM Accessory'
+~~~
+
+The descriptor combines a vendor-specific iAP interface with CDC Ethernet/NCM control and data interfaces. This establishes a concrete USB device-mode iAP2+NCM architecture in the shipped image.
+
+The production `smartphone_integrator.json` independently monitors `/dev/ipod0` and launches `dio_manager` as its CarPlay child. The shipped `/etc/mm/iap2.cfg` selects `Lightning Connector` and leaves the Bluetooth section commented out.
+
+This materially narrows the interpretation of `devu-iap2ncm-tegra3-ci.so`: its filename alone must not be treated as evidence of a Wireless CarPlay network transport. The recovered descriptor is explicitly a USB iAP2-NCM CarPlay architecture.
+
+It remains unproven whether the NCM implementation contains a transport-neutral portion reused by a wireless path. That requires binary caller/loader and transport-object tracing.
+
+**Evidence:** E-044, E-037, E-036. See TRACE-009.
+
 # 3. Component / Subsystem Breakdown
 
 ## 3.1 libiap2client.so
