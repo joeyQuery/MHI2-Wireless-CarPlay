@@ -206,7 +206,7 @@ The exact CarPlay-specific DHCP/DNS requirements have not been established and m
 
 ## 2.5 mDNS
 
-The unresolved CarPlay question is:
+The mDNS consumer is now proven inside `mdnsd`: `SetupOneInterface()` reads `MDNS_DIRECTLINK_IFACE` with `getenv()` and participates in dedicated direct-link interface registration. The unresolved CarPlay question is now:
 
 ~~~text
 Does the existing mDNS path advertise/discover CarPlay over uap0,
@@ -398,13 +398,15 @@ Wireless CarPlay requires both transports concurrently, making this existing mec
 - connectionmanager → uaputl runtime call sequence;
 - AP state transitions;
 - PF rule path for CarPlay traffic;
-- mDNS interface selection;
+- production boot-time propagation of `MDNS_DIRECTLINK_IFACE` into `mdnsd`;
+- final mDNS/AirPlay socket/interface binding;
 - peer-to-peer routing/firewall behaviour.
 
 ## Not yet proven
 
 - that stock CarPlay uses uap0;
 - that uap0 is currently passed to AirPlay;
+- that the recovered mDNS direct-link path can be redirected to uap0 without further adaptation;
 - that MDNS_DIRECTLINK_IFACE=uap0 alone is sufficient;
 - that all required Wireless CarPlay traffic is permitted;
 - that the existing AP policy exactly matches Apple's Wireless CarPlay requirements.
