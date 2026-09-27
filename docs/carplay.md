@@ -112,6 +112,10 @@ This is a state-machine map, not a claim that the exact call order has been full
 
 ## 1.4 AirPlay boundary
 
+DIO creates the production AirPlay server through `AirPlayReceiverServerCreate(...)`. In `libairplay.so`, `_UpdateBonjourAirPlay` uses the AirPlay object's `interfaceName` field at `object + 0x6c`; a non-empty name is converted with `if_nametoindex()` and passed as the interface index to `DNSServiceRegister()`.
+
+The screen interface/transport/client-MAC setter exports are production no-op stubs, so they are not treated here as the active adaptation point.
+
 DIO references:
 
 ~~~text
@@ -367,15 +371,18 @@ The Wireless CarPlay project should preserve this output path and change transpo
 - carplay0 is provided by USB NCM infrastructure.
 - MDNS_DIRECTLINK_IFACE=carplay0.
 - AirPlay contains Wi-Fi/USB interface-selection helpers.
+- DIO creates the production AirPlay server through the direct server-creation API.
+- AirPlay Bonjour registration uses `interfaceName` → `if_nametoindex()` → `DNSServiceRegister()`.
+- The screen interface/transport/client-MAC setter exports are production no-ops.
 - MHI2 already contains a WLAN/AP subsystem at uap0.
 
 ## Partially traced
 
 - exact iAP2 → DIO callback chain;
-- exact DIO → AirPlay call sequence;
-- exact screen transport values;
-- exact mDNS consumer;
-- exact network-interface binding;
+- exact DIO → AirPlay session call sequence;
+- where the AirPlay `interfaceName` field is populated;
+- exact packet/multicast socket binding;
+- boot-time `MDNS_DIRECTLINK_IFACE` environment provenance;
 - exact CarPlay media callback path.
 
 ## Not yet proven
