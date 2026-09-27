@@ -380,8 +380,10 @@ The current transport-boundary trace set is:
 - [TRACE-004 — DIO → AirPlay](../traces/TRACE-004-dio-airplay.md)
 - [TRACE-005 — AirPlay network binding](../traces/TRACE-005-airplay-network.md)
 - [TRACE-006 — session correlation](../traces/TRACE-006-session-correlation.md)
+- [TRACE-007 — MU0678 iAP2 multi-transport capability](../traces/TRACE-007-iap2-multitransport.md)
+- [TRACE-008 — MU0678 iAP2 control plane / DIO Bluetooth integration](../traces/TRACE-008-iap2-control-plane.md)
 
-All six are intentionally marked Partial or Target. None claims the unresolved wireless path is implemented.
+All eight are intentionally marked Partial or Target. None claims the unresolved wireless path is implemented.
 
 # 4. Component / Subsystem Breakdown
 
