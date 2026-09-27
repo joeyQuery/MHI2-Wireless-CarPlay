@@ -286,6 +286,8 @@ Known:
 MDNS_DIRECTLINK_IFACE=carplay0
 ~~~
 
+`mdnsd` is now proven to consume this variable in `SetupOneInterface()` via `getenv()`, retain the interface name and register the interface with the mDNS platform. The unresolved edge is how the production boot path exports the variable into the running `mdnsd` environment and how the registered interface reaches final socket binding.
+
 Remaining trace:
 
 ~~~mermaid
@@ -303,6 +305,8 @@ flowchart LR
 The critical experiment is to locate the consumer and determine whether `uap0` is sufficient as the wireless CarPlay interface.
 
 ## 2.4 AirPlay interface selection
+
+The production screen interface/transport/client-MAC setter exports are no-op stubs, and `SocketSetBoundInterface` is a tiny stub/constant-return. The active path recovered so far is the AirPlay object's `interfaceName` field at `object + 0x6c`, followed by `if_nametoindex()` and `DNSServiceRegister(..., interfaceIndex, ...)`.
 
 Known AirPlay symbols include:
 
@@ -329,9 +333,9 @@ sequenceDiagram
     participant N as Network
 
     D->>A: create/configure session
-    D->>S: transport/interface setup
-    S->>A: SetIFName / SetTransportType / SetClientIfMACAddr
-    A->>N: bind / multicast / receive setup
+    D->>A: create/configure session
+    A->>A: interfaceName -> if_nametoindex()
+    A->>N: DNS-SD / packet / multicast setup
 ~~~
 
 The caller, argument values, transport value, interface name, client MAC and call timing must be recovered.
@@ -744,6 +748,12 @@ The implementation goal is to reach this existing session machinery through wire
 | Separate `btstack` executable | **Proven** |
 | iAP/iAP2 components | **Proven** |
 | Production `enableIap=false` | **Proven** |
+| Bluetooth active-device → runtime iAP endpoint → `open64()` | **Proven** |
+| Bluetooth endpoint equals `/dev/ipod0` | **Unproven** |
+| AirPlay `interfaceName` → `if_nametoindex()` → `DNSServiceRegister()` | **Proven** |
+| AirPlay screen interface/transport/client-MAC setters as active selectors | **Disproven** |
+| `mdnsd` consumes `MDNS_DIRECTLINK_IFACE` | **Proven** |
+| Boot-time export of `MDNS_DIRECTLINK_IFACE=carplay0` into `mdnsd` | **Unproven** |
 | Production `/dev/ipod0` iAP2 configuration | **Proven** |
 | USB `carplay0` interface | **Proven** |
 | `MDNS_DIRECTLINK_IFACE=carplay0` | **Proven** |
@@ -999,6 +1009,8 @@ Determine whether the device path is hard-coded or supplied through a configurat
 
 ## Target C — `MDNS_DIRECTLINK_IFACE`
 
+The daemon consumer is already recovered. The remaining target is boot-time provenance and final socket binding.
+
 Find every reference to:
 
 ~~~text
@@ -1008,6 +1020,8 @@ MDNS_DIRECTLINK_IFACE
 and trace its value into socket/interface selection.
 
 ## Target D — AirPlay interface setup
+
+The screen setter exports are no longer the presumed adaptation point. Trace the recovered `interfaceName` producer and the substantive packet/multicast helpers.
 
 Trace callers of:
 
