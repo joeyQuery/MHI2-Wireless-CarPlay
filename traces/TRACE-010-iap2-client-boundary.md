@@ -16,7 +16,7 @@ Determine whether libiap2client.so or mss-ipodiap2.so is the missing Bluetooth-t
 | Arguments | Caller-supplied state/arguments; exact production meaning unresolved |
 | Return / error behaviour | Client-side status/error handling present; exact production semantics unresolved |
 | IPC / ASI / DSI boundary | libiap2client.so imports QNX MsgSend, MsgSendv, MsgSendsv, MsgSendvs, plus open/close; destination/channel not recovered |
-| Device / socket / file boundary | iap2cli independently exposes /dev/ipod0 as its default iPod mount/device argument; no Bluetooth/Wi-Fi selector recovered in libiap2client.so |
+| Device / socket / file boundary | iap2_connect() opens its caller-supplied path; iap2cli defaults to /dev/ipod0, but the library ABI itself is path-driven |
 | Protocol event | iAP2 client API only; no Bluetooth/Wi-Fi packet transport event recovered here |
 | Runtime confirmation | None for wireless path |
 | Evidence IDs | E-045, E-046, E-047, E-048 |
@@ -98,6 +98,8 @@ The position of `ipod-drvr-iap2.so` in that diagram is a research target derived
 
 ## Current trace
 
+The DIO-side caller boundary is now partially resolved by TRACE-011: DIO passes a caller-supplied path into iap2_connect(), and libiap2client.so opens that path. This removes the earlier assumption that the client ABI itself is tied to /dev/ipod0.
+
 ```text
 Bluetooth iAP
     |
@@ -124,10 +126,12 @@ DIO
 CIpodAP2Service
     |
     v
-iap2_connect()
+iap2_connect(path supplied by DIO)
     |
     v
-/dev/ipod0 [production configuration]
+caller-supplied resource-manager path
+    |
+    +--> /dev/ipod0 in current production configuration
 ```
 
 The crossed edge is intentional: no binary evidence currently proves that the Bluetooth runtime endpoint is handed to libiap2client, mss-ipodiap2, or DIO.
@@ -141,8 +145,8 @@ The crossed edge is intentional: no binary evidence currently proves that the Bl
 
 ## Required next trace
 
-1. Recover callers of libiap2client.so::iap2_connect() and iap2_disconnect().
-2. Recover the QNX message destination/resource-manager path used by those client calls.
+1. Recover the upstream construction of the DIO path passed into iap2_connect() and determine whether it can originate from a runtime-published transport endpoint.
+2. Recover the QNX message destination/resource-manager path used by the opened client endpoint.
 3. Recover the CIpodAP2Service constructor/service setup and determine whether it directly calls the client library.
 4. Recover the Bluetooth iAP proxy endpoint publication path and compare its runtime endpoint with the DIO /dev/ipod0 path.
 5. Recover construction/initialization of the `ipod-drvr-iap2.so` transport object and the callback table supplying `transport_get_link_params`, `transport_send_pkt`, `transport_receive` and `transport_recv_pkt`.
@@ -152,6 +156,7 @@ The crossed edge is intentional: no binary evidence currently proves that the Bl
 ## Do not infer
 
 - MsgSend* means /dev/ipod0;
+- the production /dev/ipod0 configuration means the iap2_connect() ABI is intrinsically USB-only;
 - iap2_connect() is itself a transport selector;
 - mss-ipodiap2.so is the owner of Bluetooth iAP;
 - the NCM driver can be reused wirelessly without a recovered caller/transport relationship.

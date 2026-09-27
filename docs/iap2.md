@@ -300,15 +300,24 @@ The MU0678 devu-iap2ncm-tegra3-ci.so binary identifies itself as a ChipIdea USB 
 
 iap2cli links against libiap2client.so.1 and exposes /dev/ipod0 as its default iPod mountpoint. This confirms a concrete client-side USB/iPod convention, but does not prove that every iap2_connect() call is hard-coded to that path.
 
-**Evidence:** E-045 through E-048. See TRACE-010.
+A direct disassembly of libiap2client.so::iap2_connect() now resolves the important ABI detail: its first argument is passed directly to open(). The function stores the resulting descriptor and sends a 20-byte iAP2 control message through that descriptor. The client library therefore consumes a caller-supplied QNX path; it does not intrinsically select /dev/ipod0.
+
+dio_manager provides the first recovered production caller edge. The _ZTVN3dio15CIpodAP2ServiceE vtable at 0x19bc58 contains a target at 0x15e240; that method reaches helper 0x15ddb4, which calls the imported iap2_connect at 0x115de8. At 0x15e2f4, the path pointer is supplied in r9, and the helper passes it as the first argument. The current production configuration supplies /dev/ipod0, but the ABI boundary itself is path-driven.
+
+This materially changes the transport model: a different QNX resource-manager endpoint could reach the same iap2_connect() ABI if DIO supplies that endpoint. This does not yet prove that the Bluetooth CIapBTChannel endpoint can be substituted directly, nor that DIO will accept it without additional session/state integration.
+
+**Evidence:** E-045 through E-051. See TRACE-010 and TRACE-011.
 
 The critical unresolved edge remains:
 
 ~~~text
 Bluetooth CIapBTChannel
     -> runtime endpoint
-    -> [unresolved adaptation]
-    -> DIO CIpodAP2Service / iAP2
+    -> [unresolved handoff]
+    -> DIO CIpodAP2Service
+         -> caller-supplied path
+         -> iap2_connect(path, 1)
+         -> open(path)
 ~~~
 
 TRACE-007 now provides an important architectural correlation: `ipod-drvr-iap2.so` contains the strongest recovered generic iAP2 transport layer, with transport-owned callbacks and explicit Bluetooth/Wi-Fi/USB transport-component machinery. It is therefore the strongest **candidate common layer** between the independently recovered Bluetooth and DIO sides.

@@ -144,3 +144,41 @@ The shipped /etc/mm/iap2.cfg selects Lightning Connector, so the current product
 
 
 The shipped smartphone_integrator configuration independently reinforces the USB-side boundary: it monitors /dev/ipod0 and defines its CarPlay child as dio_manager. This is orchestration evidence, not proof that wireless iAP2 cannot be integrated later.
+
+## New binary boundary recovered
+
+A direct ARM disassembly of the MU0678 binaries resolves the previously unresolved argument/device boundary.
+
+`dio_manager` has a `_ZTVN3dio15CIpodAP2ServiceE` vtable at `0x19bc58`. One recovered virtual target is `0x15e240`. Within that method:
+
+~~~text
+0x15e2c8  -> select path pointer into r9
+0x15e2ec  mov r1, r9
+0x15e2f0  mov r0, r11
+0x15e2f4  bl  0x15ddb4
+~~~
+
+The helper at `0x15ddb4` then reaches the imported `iap2_connect` PLT entry at `0x115de8`:
+
+~~~text
+0x15ddb4:
+    ...
+    r1 = caller-supplied path
+    r0 = output handle storage
+    ...
+0x15dde0:
+    mov r0, r4
+    bl  0x115de8   ; iap2_connect
+0x15dde8:
+    str r0, [r5]
+~~~
+
+At the callsite `0x15e2f4`, `r9` is passed as the first argument to the helper and `r2` has been set to `1`; the helper preserves the caller's second argument and therefore invokes `iap2_connect(path=r9, flags=1)`.
+
+The path is therefore not compiled into `libiap2client.so`. It is supplied by the DIO-side caller.
+
+This is the first direct binary edge that changes the previous interpretation of the DIO boundary: `/dev/ipod0` is a production configuration/default path, not an intrinsic requirement of the `iap2_connect()` client ABI.
+
+The exact upstream construction of `r9` and whether the Bluetooth `CIapBTChannel` endpoint can reach this same DIO path remain unresolved.
+
+**Evidence:** E-049, E-050, E-051. See TRACE-011.
