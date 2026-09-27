@@ -292,15 +292,21 @@ Remaining trace:
 
 ~~~mermaid
 flowchart LR
-    ENV["MDNS_DIRECTLINK_IFACE"]
-    CONSUMER["Unknown consumer"]
-    SOCKET["mDNS / socket setup"]
+    CONFIG["MDNS_DIRECTLINK_IFACE=carplay0"]
+    MDNSD["mdnsd::SetupOneInterface()"]
+    ENV["getenv()"]
+    REGISTER["direct-link interface registration"]
+    SOCKET["final socket binding"]
     AIRPLAY["libairplay.so"]
 
-    ENV -.-> CONSUMER
-    CONSUMER -.-> SOCKET
+    CONFIG -.-> ENV
+    ENV --> MDNSD
+    MDNSD --> REGISTER
+    REGISTER -.-> SOCKET
     SOCKET -.-> AIRPLAY
 ~~~
+
+The `mdnsd` consumer is proven. The unresolved edges are the production environment producer/propagation path and the final socket/interface binding.
 
 The critical experiment is to locate the consumer and determine whether `uap0` is sufficient as the wireless CarPlay interface.
 
@@ -332,7 +338,6 @@ sequenceDiagram
     participant S as AirPlay Screen
     participant N as Network
 
-    D->>A: create/configure session
     D->>A: create/configure session
     A->>A: interfaceName -> if_nametoindex()
     A->>N: DNS-SD / packet / multicast setup
