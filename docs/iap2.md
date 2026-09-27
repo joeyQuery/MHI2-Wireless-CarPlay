@@ -287,6 +287,32 @@ It remains unproven whether the NCM implementation contains a transport-neutral 
 
 **Evidence:** E-044, E-037, E-036. See TRACE-009.
 
+
+## 2.9 MU0678 iAP2 client / media-synchronizer boundary
+
+The MU0678 libiap2client.so exports the iAP2 client API, including iap2_connect(), iap2_disconnect(), raw-message, EAP, HID, media-library and vehicle-update functions. Its system-facing imports include QNX MsgSend, MsgSendv, MsgSendsv, MsgSendvs, open, close and ionotify.
+
+No Bluetooth, Wi-Fi, HCI, socket or transport-component symbol was recovered in libiap2client.so. Therefore it is not presently identified as the missing Bluetooth transport adapter. The QNX message destination behind the client calls remains unresolved.
+
+mss-ipodiap2.so exports the same core iap2_* client surface and identifies itself as an iPod iAP2 Media Synchronizer. Its iap2_connect()/iap2_disconnect() implementations have the same sizes and high-level instruction structure as libiap2client.so, but are not byte-identical.
+
+The MU0678 devu-iap2ncm-tegra3-ci.so binary identifies itself as a ChipIdea USB OTG peripheral-controller driver and explicitly describes an iAP2 NCM accessory. Its recovered implementation is USB device-controller code. It therefore cannot be treated as the wireless iAP2 bridge from its filename alone.
+
+iap2cli links against libiap2client.so.1 and exposes /dev/ipod0 as its default iPod mountpoint. This confirms a concrete client-side USB/iPod convention, but does not prove that every iap2_connect() call is hard-coded to that path.
+
+**Evidence:** E-045 through E-048. See TRACE-010.
+
+The critical unresolved edge remains:
+
+~~~text
+Bluetooth CIapBTChannel
+    -> runtime endpoint
+    -> [unresolved adaptation]
+    -> DIO CIpodAP2Service / iAP2
+~~~
+
+Do not substitute libiap2client.so, mss-ipodiap2.so or the NCM device-controller as this missing adaptation without a recovered caller/transport relationship.
+
 # 3. Component / Subsystem Breakdown
 
 ## 3.1 libiap2client.so
