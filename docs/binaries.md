@@ -59,7 +59,7 @@ The meaning of `topologyLogic=1` and the exact `enableIap` control flow remain u
 |---|---|---|
 | `/eso/bin/apps/iap` | iAP application/process | Partial |
 | `libiap2client.so` | iAP2 client component | Partial |
-| `ipod-drvr-iap2.so` | iAP2/iPod-side component | Partial |
+| `ipod-drvr-iap2.so` | Multi-transport iAP2 driver with USB/Bluetooth/Wi-Fi transport identification and generic transport callbacks | Partial |
 | `mss-ipodiap2.so` | iAP2-related component | Partial |
 | `devu-iap2-tegra3-ci.so` | iAP2 device/transport component | Partial |
 | `devu-iap2ncm-tegra3-ci.so` | iAP2 NCM-related component | Partial |
