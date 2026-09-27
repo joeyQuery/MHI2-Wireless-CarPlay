@@ -372,6 +372,26 @@ Wireless CarPlay requires both transports concurrently, making this existing mec
 
 ---
 
+## 3.10 iAP2 Wi-Fi transport capability
+
+The MU0678 ipod-drvr-iap2.so binary contains a dedicated Wi-Fi transport Identify handler, ident_info_tspwifi, and a static descriptor, sparams_id_info_wifitspcomp. Its fields include TransportComponentName, TransportSupportsiAP2Connection and TransportSupportsCarPlay.
+
+The same binary contains the generic iAP2 transport callback layer: transport_send_pkt, transport_receive and transport_get_link_params.
+
+This proves that the MU0678 iAP2 implementation contains an explicit Wi-Fi/iAP2/CarPlay transport capability model.
+
+It does not prove that the existing uap0 network is already used for iAP2 traffic. The shipped /etc/mm/iap2.cfg selects Lightning Connector, so production wireless transport selection remains unresolved.
+
+~~~text
+uap0 exists
+      +
+iAP2 Wi-Fi capability exists
+      !=
+production Wireless CarPlay iAP2 is active
+~~~
+
+**Evidence:** E-032, E-034, E-036.
+
 # 4. Evidence Status
 
 ## Proven
@@ -516,23 +536,3 @@ The proposed relationship is technically plausible but requires MHI2-specific ev
 
 No external Wireless CarPlay implementation is treated as proof of MHI2 behaviour.
 
-
-## 3.7 iAP2 Wi-Fi transport capability
-
-The MU0678 ipod-drvr-iap2.so binary contains a dedicated Wi-Fi transport Identify handler, ident_info_tspwifi, and a static descriptor, sparams_id_info_wifitspcomp. Its fields include TransportComponentName, TransportSupportsiAP2Connection and TransportSupportsCarPlay.
-
-The same binary contains the generic iAP2 transport callback layer: transport_send_pkt, transport_receive and transport_get_link_params.
-
-This proves that the MU0678 iAP2 implementation contains an explicit Wi-Fi/iAP2/CarPlay transport capability model.
-
-It does not prove that the existing uap0 network is already used for iAP2 traffic. The shipped /etc/mm/iap2.cfg selects Lightning Connector, so production wireless transport selection remains unresolved.
-
-~~~text
-uap0 exists
-      +
-iAP2 Wi-Fi capability exists
-      !=
-production Wireless CarPlay iAP2 is active
-~~~
-
-**Evidence:** E-032, E-034, E-036.
