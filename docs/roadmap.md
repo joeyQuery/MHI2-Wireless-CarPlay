@@ -98,25 +98,29 @@ Implementation should begin only after the relevant transport boundaries above a
 ```text
 Bluetooth
    │
-   ├── enableIap
-   │      ↓
-   │   Bluetooth iAP
-   │      ↓
-   │   wireless iAP2
-   │      ↓
-   │   DIO iAP2 boundary
-   │             │
-   │             ├──────────────┐
-   │             ▼              │
-   │          CarPlay           │
-   │             ▲              │
-   │             │              │
-   └─────────────┘              │
-                                │
-uap0 → mDNS → AirPlay ────────────┘
+   ├── [unresolved activation/control path]
+   │          ↓
+   │      Bluetooth iAP
+   │          ↓
+   │      wireless iAP2
+   │          ↓
+   │      DIO iAP2 boundary
+   │                │
+   │                ├──────────────┐
+   │                ▼              │
+   │             CarPlay           │
+   │                ▲              │
+   │                │              │
+   └────────────────┘              │
+                                   │
+enableIap                           │
+   │                                │
+   └── [consumer/control branch unresolved]
+                                    │
+uap0 → mDNS → AirPlay ───────────────┘
 ```
 
-The graph shows convergence targets, not proven call edges.
+The graph shows convergence targets, not proven call edges. In particular, the current evidence does **not** prove that `enableIap` directly gates Bluetooth iAP, nor that Bluetooth iAP directly becomes the wireless iAP2 transport.
 
 ## Completion Criterion
 
