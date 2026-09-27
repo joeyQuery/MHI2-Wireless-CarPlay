@@ -1085,8 +1085,7 @@ SPP is **not currently proven as an active production capability** for this MHI2
 ```mermaid
 flowchart LR
     SPP["SPP"]
-    STATUS["Not yet proven
-for production MHI2"]
+    STATUS["Not yet proven\nfor production MHI2"]
 
     SPP -.-> STATUS
 ```
