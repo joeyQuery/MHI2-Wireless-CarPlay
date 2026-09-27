@@ -34,17 +34,7 @@ MDNS_DIRECTLINK_IFACE=carplay0
 
 at virtual address `0x190d2c`, adjacent to other mDNS configuration metadata. This establishes the value as part of the binary's configuration data rather than an isolated architectural description.
 
-The mDNS consumer is now recovered: `mdnsd` explicitly calls `getenv("MDNS_DIRECTLINK_IFACE")` from `SetupOneInterface()`, retains the interface name in its interface structure, and registers that interface with the mDNS platform. What remains unresolved is how the running `mdnsd` process receives the variable at boot. Therefore the trace is now:
-
-```text
-MDNS_DIRECTLINK_IFACE=carplay0
-        |
-        +--> [consumer: unresolved]
-                    |
-                    +--> [interface propagation: unresolved]
-                                |
-                                +--> [socket binding: unresolved]
-```
+The mDNS consumer is now recovered: `mdnsd` explicitly calls `getenv("MDNS_DIRECTLINK_IFACE")` from `SetupOneInterface()`, retains the interface name in its interface structure, and registers that interface with the mDNS platform. What remains unresolved is how the running `mdnsd` process receives the variable at boot. The consumer edge is therefore proven; the producer/provenance edge and final socket details remain open.
 
 ## Newly recovered mDNS trace
 
