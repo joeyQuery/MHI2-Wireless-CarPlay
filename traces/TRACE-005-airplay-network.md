@@ -82,23 +82,6 @@ AirPlay
 ```
 
 
-```text
-AirPlay Screen
-   |
-   +--> SetIFName
-   +--> SetTransportType
-   +--> SetClientIfMACAddr
-             |
-             +--> [internal propagation: unresolved]
-                         |
-                         +--> SocketSetBoundInterface
-                         +--> SocketSetPacketReceiveInterface
-                         +--> SocketSetMulticastInterface
-                                     |
-                                     +--> [actual runtime interface: unresolved]
-```
-
-These are binary capabilities, not proof that the production MHI2 path uses `uap0`.
 
 ## Evidence
 
