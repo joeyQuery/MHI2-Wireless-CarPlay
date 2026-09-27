@@ -18,19 +18,33 @@ The exact firmware build, hardware variant and extraction provenance must be rec
 | Field | Value |
 |---|---|
 | Head-unit/platform | Audi MHI2 |
-| MU/software family | MU0678-class |
-| Hardware variant | Record exact variant when known |
-| Firmware/software version | Record exact version |
-| Source | Record dump/source origin |
-| Extraction date | Record when known |
-| Archive/hash | Record SHA-256 or equivalent |
-| Architecture | Record exact CPU/ABI when verified |
-| Modifications | Stock / modified, with details |
-| Runtime correspondence | Whether runtime observations came from this exact baseline |
+| MU/software family | MU0678-class; exact analysis firmware identifier recorded below |
+| Hardware variant | UNKNOWN |
+| Firmware/software version / identifier | `MU0678-MHI2_ER_AUG22_P3241-JTB-07429.06.161184010D` |
+| Analysis source path | `MHI2-CarPlay-Alternate-Screen/dump/MU0678-MHI2_ER_AUG22_P3241-JTB-07429.06.161184010D/advanced/MU0678-appimg` |
+| Extraction date | UNKNOWN |
+| Archive/hash | UNKNOWN |
+| Architecture / CPU / ABI | UNKNOWN |
+| Modifications | UNKNOWN for the source dump; individual modified experimental files are documented separately when applicable |
+| Runtime correspondence | UNKNOWN / not formally established for all historical runtime observations |
 
 ## Current Provenance State
 
-The repository currently has **incomplete formal provenance** for the exact dump/build used for every historical finding. The platform family is identified as MU0678-class QNX, but the exact firmware version, hardware variant, extraction source and archive hash are not yet recorded here. Provenance-dependent conclusions must therefore remain tied to their stated source documents and must not be promoted merely because they appear in multiple documents.
+The current primary analysis dump is identified by the exact firmware/dump name:
+
+```text
+MU0678-MHI2_ER_AUG22_P3241-JTB-07429.06.161184010D
+```
+
+Its repository analysis source is:
+
+```text
+MHI2-CarPlay-Alternate-Screen/dump/MU0678-MHI2_ER_AUG22_P3241-JTB-07429.06.161184010D/advanced/MU0678-appimg
+```
+
+The exact identifier above is recorded from the dump name supplied for this analysis. It is **not** decoded here into separate hardware/version fields beyond what the evidence explicitly establishes. The original extraction date, archive hash, exact hardware variant, CPU/ABI, stock/modified state of the source dump, and formal one-to-one correspondence between every historical runtime observation and this exact image remain UNKNOWN unless separately documented.
+
+The repository therefore has a known exact analysis identifier and source path, but incomplete forensic provenance. Provenance-dependent conclusions must remain tied to their stated source documents and must not be promoted merely because they appear in multiple documents.
 
 This is a documentation blocker, not a reason to invent missing values.
 
@@ -92,7 +106,7 @@ stock vs modified state
 relationship between dump and runtime unit
 ```
 
-If a field is unknown, write `UNKNOWN` rather than leaving provenance ambiguous. Do not infer an exact firmware build from a MU0678-class family label.
+If a field is unknown, write `UNKNOWN` rather than leaving provenance ambiguous. The exact analysis identifier above is known; do not infer additional hardware, extraction or ABI facts from its name alone.
 
 ## Firmware Evidence Rule
 
