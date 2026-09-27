@@ -413,3 +413,43 @@ The two paths must correlate into one CarPlay session.
 Presence of an iAP2 binary proves infrastructure exists, not that a production Wireless CarPlay path is enabled.
 
 The final goal is a function-level transport map rather than a component inventory.
+
+
+## 2.6 MU0678 multi-transport iAP2 driver boundary
+
+The production ipod-drvr-iap2.so contains a generic transport wrapper layer:
+
+~~~text
+link_create()
+    -> transport_get_link_params()
+
+link_send_probe()
+    -> transport_send_pkt()
+
+transport_receive()
+    -> transport-owned receive callback
+~~~
+
+The same binary contains separate Identify-information handlers for Bluetooth, Wi-Fi, USB device/host and serial transport components. The ident_info_funcs table contains entries for both Bluetooth and Wi-Fi handlers. The Wi-Fi descriptor explicitly includes TransportSupportsiAP2Connection and TransportSupportsCarPlay.
+
+This proves that the shipped iAP2 driver contains first-class Bluetooth and Wi-Fi transport-component identification machinery. It does not yet prove that the production MHI2 session actually carries iAP2 packets over Wi-Fi or Bluetooth through this driver.
+
+The exact MU0678 /etc/mm/iap2.cfg specifies:
+
+~~~text
+[transport]
+name=Lightning Connector
+id=1234
+~~~
+
+and its Bluetooth configuration section is commented out.
+
+Therefore:
+
+~~~text
+compiled wireless transport capability = Proven
+production wireless packet transport     = Unproven
+enableIap=true is sufficient             = Unproven
+~~~
+
+See TRACE-007 and evidence E-032 through E-036.
