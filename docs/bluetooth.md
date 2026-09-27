@@ -216,9 +216,11 @@ The production configuration explicitly sets:
 enableIap = false
 ```
 
-This establishes that Bluetooth-side iAP functionality is disabled in this configuration.
+This establishes the production configuration value. The exact functionality controlled by
+that setting remains unresolved until its parser/control-flow branch is recovered.
 
-It does **not** establish that iAP/iAP2 support is absent from the firmware.
+It does **not** establish that Bluetooth-side iAP functionality is disabled at runtime,
+and it does not establish that iAP/iAP2 support is absent from the firmware.
 
 The image contains dedicated iAP infrastructure:
 
