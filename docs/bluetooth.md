@@ -240,7 +240,7 @@ flowchart LR
     PROXY --> IAP2
 ```
 
-The exact code path controlled by `enableIap` remains unresolved.
+The exact code path controlled by `enableIap` remains unresolved. However, the Bluetooth iAP runtime endpoint path is now substantially recovered below.
 
 ---
 
@@ -439,7 +439,49 @@ This is one of the highest-value existing tracing facilities for further reverse
 
 ---
 
-## 1.8 iAP / iAP2 Infrastructure
+## 1.8 Bluetooth iAP runtime endpoint
+
+The production `/eso/bin/apps/iap` binary contains a dedicated `iap::CIapBTChannel` with:
+
+```text
+openiAPDevice()       0x109a9c
+connectToiAPDevice()  0x109570
+closeiAPDevice()     0x108d6c
+readiAPDevice()      0x108c14
+writeiAPDevice()     0x108bc8
+updateiAPDevice()    0x10b434
+```
+
+The important recovered path is:
+
+```text
+Bluetooth IapDeviceServices
+        |
+        | active-device callback
+        v
+CIapDeviceServicesReplyImpl::updateActiveDevices()
+        |
+        v
+CIapBTChannel::updateiAPDevice(...)
+        |
+        | runtime CIString / endpoint path
+        v
+CIapBTChannel::openiAPDevice()
+        |
+        v
+open64(path)
+        |
+        v
+Bluetooth iAP2 endpoint
+```
+
+This proves the Bluetooth channel receives its endpoint at runtime. The `iap` binary contains no `/dev/ipod0` literal, so the Bluetooth endpoint must not be equated with DIO's USB `/dev/ipod0` endpoint without recovering the actual returned value.
+
+The same binary contains the iAP2 packet/link state machine and `IapDeviceServicesProxy` / reply infrastructure. Production configuration still sets `enableIap=false`.
+
+**Evidence:** E-021, E-022, E-023, E-024. See TRACE-001.
+
+## 1.9 iAP / iAP2 Infrastructure
 
 The firmware contains:
 
