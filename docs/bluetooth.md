@@ -1665,3 +1665,26 @@ The objective is to replace every remaining assumption with a traceable fact.
 ---
 
 > **Trace it. Prove it. Document it.**
+
+
+## 1.13 MU0678 iAP2 multi-transport capability
+
+The MU0678 iAP2 driver contains a deeper transport model than the earlier component map showed.
+
+ipod-drvr-iap2.so exposes transport_get_link_params, transport_send_pkt, transport_receive and transport_recv_pkt; the link layer calls these through transport-owned callback fields. This establishes a generic transport boundary inside the driver.
+
+It also contains separate Identify handlers for ident_info_tspbt, ident_info_tspwifi, ident_info_tspusbdev, ident_info_tspusbhost and ident_info_tspserial, with an ident_info_funcs table containing both Bluetooth and Wi-Fi entries.
+
+The Bluetooth descriptor includes TransportComponentName, TransportSupportsiAP2Connection and BluetoothTransportMediaAccessControlAddress. The Wi-Fi descriptor includes TransportComponentName, TransportSupportsiAP2Connection and TransportSupportsCarPlay.
+
+This is direct MU0678 binary evidence that the iAP2 implementation has explicit Bluetooth and Wi-Fi transport-component representations, and that the Wi-Fi component can advertise CarPlay support.
+
+The shipped /etc/mm/iap2.cfg still selects Lightning Connector and leaves the Bluetooth configuration section commented out. Therefore compiled capability and shipped production configuration remain separate claims.
+
+~~~text
+Bluetooth/Wi-Fi iAP2 capability in binary = Proven
+Shipped wireless iAP2 execution           = Unproven
+enableIap=true sufficient                 = Unproven
+~~~
+
+See TRACE-007 and evidence E-032 through E-036.
