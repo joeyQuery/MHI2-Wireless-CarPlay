@@ -46,7 +46,7 @@ The target diagram describes the investigation target, not a completed implement
 5. Where is the AirPlay object's `interfaceName` populated, and what runtime value does it hold?
 6. What callers/arguments drive the substantive AirPlay packet/multicast interface helpers?
 7. How are Bluetooth/iAP2 and Wi-Fi/AirPlay associated with the same phone/session?
-8. Can the recovered AirPlay/mDNS path operate on `uap0` without modification?
+8. Can the recovered AirPlay/mDNS path operate on `uap0` without modification?\n9. What production activation branch connects the existing Bluetooth/Wi-Fi iAP2 machinery to the DIO CarPlay state machine?
 
 ## Evidence Rules
 
