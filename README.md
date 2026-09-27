@@ -327,6 +327,7 @@ How does the Bluetooth/iAP2 bootstrap become associated with the Wi-Fi/AirPlay s
 - Production CarPlay uses /dev/ipod0.
 - Production CarPlay networking uses carplay0.
 - MDNS_DIRECTLINK_IFACE=carplay0 exists in the production configuration.
+- mdnsd explicitly consumes MDNS_DIRECTLINK_IFACE via getenv() and direct-link interface handling, but boot-time environment propagation remains unproven.
 - libairplay.so contains Bonjour/mDNS functionality.
 - libairplay.so contains Wi-Fi/USB interface-selection helpers.
 - libairplay.so exposes screen interface/transport configuration APIs.
