@@ -96,6 +96,25 @@ The position of `ipod-drvr-iap2.so` in that diagram is a research target derived
 
 **Evidence:** E-032 through E-036, E-045 through E-048. See TRACE-007 and TRACE-010.
 
+## Cross-trace result: client-to-driver boundary proven
+
+TRACE-012 resolves the QNX destination question. libiap2client.so::iap2_connect() opens the caller-supplied path and sends a fixed 20-byte MsgSend handshake. The MU0678 ipod-drvr-iap2.so resource-manager object contains iap2_msg(), which checks the same 0x9999 marker at message offset +6 and replies with 2.
+
+Proven edge:
+
+```text
+iap2_connect(path, flags)
+    -> open(path)
+    -> QNX resource-manager connection
+    -> 20-byte MsgSend (+0x06 = 0x9999)
+    -> ipod-drvr-iap2.so::iap2_msg()
+    -> MsgReply(..., 2)
+```
+
+This materially changes the previous uncertainty. The client-to-driver convergence is proven; the remaining question is whether the Bluetooth runtime endpoint is the same mounted iAP2 resource-manager service.
+
+Evidence: E-053 through E-055. See TRACE-012.
+
 ## Current trace
 
 The DIO-side caller boundary is now partially resolved by TRACE-011: DIO passes a caller-supplied path into iap2_connect(), and libiap2client.so opens that path. This removes the earlier assumption that the client ABI itself is tied to /dev/ipod0.
@@ -149,9 +168,9 @@ The crossed edge is intentional: no binary evidence currently proves that the Bl
 2. Recover the QNX message destination/resource-manager path used by the opened client endpoint.
 3. Recover the CIpodAP2Service constructor/service setup and determine whether it directly calls the client library.
 4. Recover the Bluetooth iAP proxy endpoint publication path and compare its runtime endpoint with the DIO /dev/ipod0 path.
-5. Recover construction/initialization of the `ipod-drvr-iap2.so` transport object and the callback table supplying `transport_get_link_params`, `transport_send_pkt`, `transport_receive` and `transport_recv_pkt`.
-6. Compare that transport object/boundary with both the Bluetooth `open64()` endpoint and the DIO `iap2_connect()` QNX destination.
-7. Only then determine whether a transport-neutral adaptation point exists between Bluetooth iAP2 and DIO.
+5. Recover construction/initialization of the ipod-drvr-iap2.so transport object and its relationship to the resource-manager driver object.
+6. Compare that transport boundary with the Bluetooth open64() endpoint.
+7. Determine whether the Bluetooth endpoint is the same resource-manager service or a separate endpoint requiring adaptation.
 
 ## Do not infer
 

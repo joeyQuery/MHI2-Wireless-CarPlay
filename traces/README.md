@@ -27,6 +27,7 @@ No target arrow is evidence by itself.
 | [TRACE-009](TRACE-009-iap2-ncm-usb-boundary.md) | MU0678 iAP2-NCM / USB CarPlay boundary | Partial |
 | [TRACE-010](TRACE-010-iap2-client-boundary.md) | MU0678 iAP2 client / media-synchronizer boundary | Partial |
 | [TRACE-011](TRACE-011-dio-runtime-iap2-endpoint.md) | MU0678 DIO runtime iAP2 endpoint path | Partial |
+| [TRACE-012](TRACE-012-iap2-client-resource-manager.md) | MU0678 iAP2 client → driver resource-manager boundary | Complete |
 
 ## Trace record format
 

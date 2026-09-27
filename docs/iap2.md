@@ -270,6 +270,48 @@ enableIap activation semantics                     = Unproven
 
 See TRACE-007 and evidence E-032 through E-036.
 
+## 2.7b MU0678 iAP2 client → resource-manager boundary
+
+The client-to-driver boundary is directly proven by matching the binary message ABI.
+
+libiap2client.so::iap2_connect():
+
+```text
+open(caller-supplied-path, flags)
+    ↓
+MsgSend(fd, 20-byte message, 20, 4-byte reply, 4)
+```
+
+The 20-byte message contains 0x0113, 0x0014, 0x0013 and a 0xffff9999 field at offset +0x06.
+
+The MU0678 ipod-drvr-iap2.so contains an ipod_module record whose driver object is iap2_drvr. That object contains iap2_init, transport_recv_pkt, iap2_msg, iap2_notify, iap2_unblock, OCB lifecycle handlers and fsys_open/read/lseek. iap2_msg() checks the received message at +0x06 for 0x9999 and on match calls MsgReply with reply value 2.
+
+The same driver calls ipod_resmgr_mount(runtime_mountpoint, 1) during iAP2 feature startup.
+
+Therefore:
+
+```text
+DIO / libiap2client
+    |
+    | iap2_connect(path, flags)
+    v
+open(path)
+    |
+    v
+QNX resource-manager endpoint
+    |
+    | MsgSend: 20-byte iAP2 connect ABI
+    v
+ipod-drvr-iap2.so::iap2_msg()
+    |
+    v
+MsgReply(..., 2)
+```
+
+This is no longer an inferred relationship. The exact endpoint pathname and its Bluetooth correlation remain unresolved.
+
+Evidence: E-053 through E-055. See TRACE-012.
+
 ## 2.8 MU0678 USB iAP2-NCM boundary
 
 The MU0678 dump contains an explicit USB CarPlay device descriptor whose product is:

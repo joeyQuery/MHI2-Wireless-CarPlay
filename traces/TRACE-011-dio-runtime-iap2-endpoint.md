@@ -126,7 +126,13 @@ iAP2 control message
 
 This is materially different from treating /dev/ipod0 as an immutable DIO transport boundary.
 
-## 4. Consequence for Wireless CarPlay
+## 4. Resource-manager correlation
+
+TRACE-012 proves that the opened DIO path terminates at the MU0678 iAP2 resource-manager ABI implemented by ipod-drvr-iap2.so::iap2_msg(). The exact pathname remains separate from the protocol boundary.
+
+Evidence: E-053 through E-055. See TRACE-012.
+
+## 5. Consequence for Wireless CarPlay
 
 The Bluetooth-side trace already proves:
 
@@ -142,8 +148,8 @@ Therefore the two sides are no longer separated by a pathname-level incompatibil
 This does not prove direct substitution. The next trace must identify:
 
 1. the exact Bluetooth endpoint string returned by IapDeviceServices;
-2. its QNX resource-manager owner;
-3. whether that endpoint exposes the iAP2 command ABI expected by libiap2client.so;
+2. whether that endpoint is the same mounted resource-manager service implemented by ipod-drvr-iap2.so;
+3. whether that endpoint exposes the exact iAP2 command ABI expected by libiap2client.so;
 4. whether the DIO caller can receive that endpoint instead of /dev/ipod0;
 5. whether the same endpoint supports the complete DIO iAP2 event/session lifecycle.
 
