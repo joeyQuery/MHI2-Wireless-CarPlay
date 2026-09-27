@@ -218,16 +218,22 @@ The high-value boundary is:
 ~~~mermaid
 flowchart LR
     UAP["uap0"]
-    MDNS["mDNS"]
+    MDNS["mDNS / mdnsd"]
+    CONFIG["DIO configuration metadata"]
     ENV["MDNS_DIRECTLINK_IFACE"]
+    REGISTER["direct-link interface registration"]
     DIO["dio_manager"]
     AIRPLAY["libairplay.so"]
 
-    UAP --> MDNS
-    ENV --> DIO
-    MDNS --> DIO
-    DIO --> AIRPLAY
+    UAP -.-> MDNS
+    CONFIG -.-> ENV
+    ENV --> MDNS
+    MDNS --> REGISTER
+    REGISTER -.-> DIO
+    DIO -.-> AIRPLAY
 ~~~
+
+The `mdnsd` consumer is proven. The production propagation from DIO/configuration into the daemon environment is not. The final mDNS/AirPlay handoff is also unresolved.
 
 ## 2.6 PF / routing
 
