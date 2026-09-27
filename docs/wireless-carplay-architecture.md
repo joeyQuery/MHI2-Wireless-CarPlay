@@ -1108,3 +1108,39 @@ MDNS_DIRECTLINK_IFACE=carplay0
 The Wireless CarPlay implementation should therefore be treated as a **transport adaptation of the existing MHI2 CarPlay stack**, not as a replacement WLAN or AirPlay implementation.
 
 The architecture is fully traced only when the remaining transport boundaries are demonstrated at binary, runtime and protocol level.
+
+
+---
+
+# 10. Newly recovered iAP2 transport boundary
+
+The MU0678 iAP2 driver adds an important constraint to the architecture map.
+
+~~~text
+ipod-drvr-iap2.so
+    |
+    +--> generic transport callbacks
+    |       +--> transport_get_link_params()
+    |       +--> transport_send_pkt()
+    |       +--> transport_receive()
+    |
+    +--> transport identification
+            +--> Bluetooth transport component
+            +--> Wi-Fi transport component
+            +--> USB device/host transport components
+~~~
+
+The Wi-Fi transport descriptor explicitly contains TransportSupportsiAP2Connection and TransportSupportsCarPlay. The Bluetooth descriptor contains TransportSupportsiAP2Connection and BluetoothTransportMediaAccessControlAddress.
+
+The shipped configuration nevertheless selects Lightning Connector.
+
+Therefore:
+
+~~~text
+compiled wireless transport capability = Proven
+production wireless transport selection = Unproven
+~~~
+
+The next implementation-relevant question is where the transport object/callback table is instantiated and which implementation is selected for a real wireless session.
+
+**Evidence:** E-032 through E-036. See TRACE-007.
