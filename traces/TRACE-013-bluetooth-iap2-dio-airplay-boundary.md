@@ -519,3 +519,92 @@ Thus the cached configuration byte is not merely stored: it is read and particip
 **Still open:** the final alias/data-flow proof that the receiver passed by the `0x17baf4` callsite is specifically the `CBluetoothApplication +0xB8` instance. That edge is not being inferred from proximity or naming.
 
 **Evidence:** MU0678 `bluetooth` ELF; vtable `0x248208`, constructor `0x155178`, construction callsite `0x1475d8`, consumer `0x17b29c`, callers `0x17b598` and `0x17baf4`.
+
+
+## 15. `enableIap` is inside the reconnect/topology decision path
+
+The consumer trace can now be pushed beyond the raw `+0x28` read.
+
+At `0x17b280`, the helper receives the `CBluetoothTopologyReconnect` object in `r0`, saves it in `r5`, and first refreshes/derives state through a helper call. It then reads the cached `enableIap` byte:
+
+```text
+0x17b288  MOV  r5,r0
+0x17b29c  LDRB r3,[r5,#0x28]
+0x17b2a4  CMP  r3,#0
+```
+
+The two branches are materially different:
+
+```text
+enableIap != 0
+    -> call 0x179e40
+    -> common reconnect/topology operation at 0x179618
+
+ enableIap == 0
+    -> read global FecAppMMXProxy::getIName() object
+    -> read its +0x38 state field
+    -> if state > 3, call 0x179618
+    -> continue through 0x16d8c8
+```
+
+The global object access is not guessed from a string. The GOT slot used by the helper is independently relocated:
+
+```text
+GOT + 0x688 = 0x24cd74
+R_ARM_GLOB_DAT
+_ZZN3asi3fec14FecAppMMXProxy8getINameEvE5iname
+```
+
+Thus the branch is explicitly coupled to the **FEC application state** as well as `enableIap`.
+
+There are three recovered callers of the helper:
+
+```text
+0x17b598  BL  0x17b280
+0x17b938  B   0x17b280
+0x17baf4  BL  0x17b280
+```
+
+The `0x17b938` caller is especially useful: it is reached after a state/update operation and passes its own `r4` as the receiver before tail-branching into the helper. The surrounding code is operating on reconnect/topology data structures, not a generic configuration object.
+
+The binary's own diagnostic/configuration vocabulary independently confirms the subsystem boundary. The same production image contains the reconnect/topology function-name strings:
+
+```text
+checkReconnect
+requestChangeTopology
+updateTopology
+updateReconnectInfo
+isReconnectPossible
+selectTopologyLogic
+setTopologyLogic
+```
+
+and configuration keys:
+
+```text
+automaticReconnectDisabled
+iapEnabled
+bluetooth.topologyLogic
+bluetooth.enableIap
+bluetooth.deactivateAutomaticReconnect
+```
+
+It also contains the reconnect diagnostics:
+
+```text
+Automatic reconnect deactivated in GEM
+Automatic reconnect deactivated by smartphone mode
+Reconnect is suspended
+Reconnect is allowed
+Coding Phone allowed
+```
+
+### Interpretation boundary
+
+**Now proven:** `bluetooth.enableIap` is not an isolated feature flag. Its cached value is consumed by code embedded in the production Bluetooth **topology/reconnect control path**, where the alternative branch also consults FEC application state.
+
+**Still not claimed:** this does not yet prove that `enableIap` itself creates an iAP2 transport, opens an RFCOMM endpoint, or starts `btstack`. The separate `IapDeviceServices`/`CIapBTChannel` endpoint path remains a different boundary.
+
+This is nevertheless a major architectural correction: `enableIap` belongs to the **Bluetooth topology/reconnect policy layer** that decides how Bluetooth connectivity is re-evaluated, rather than to the `+0x1182/+0x1186/+0x118A` vehicle-coding flags or to the low-level btstack process directly.
+
+**Evidence:** MU0678 `bluetooth` ELF; `0x17b280` consumer, callers `0x17b598`, `0x17b938`, `0x17baf4`; GOT relocation `0x24cd74` for `FecAppMMXProxy::getIName()::iname`; reconnect/topology strings and configuration keys in the same production image.
