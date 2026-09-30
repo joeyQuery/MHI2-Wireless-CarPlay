@@ -53,3 +53,4 @@ Every trace should record the following fields, even when the value is `Unresolv
 Completed trace facts outrank architectural prose. See [Source of Truth](../docs/source-of-truth.md).
 
 Raw runtime captures and experiment repositories are intentionally outside this directory. Therefore a trace may cite a runtime observation without being repository-reproducible; that limitation must be stated explicitly in the trace record.
+| [TRACE-016](TRACE-016-iapdevice-pathname-dataflow.md) | IapDevice pathname source to resmgr_attach boundary | Partial |\n
