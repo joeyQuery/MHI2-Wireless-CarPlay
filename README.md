@@ -2,20 +2,51 @@
 
 **Plain English** · [**Technical English**](docs/technical-readme.md)
 
-This project is trying to understand whether **Wireless CarPlay can be made to work on Audi MHI2 systems** using the hardware and software already inside the car.
+This project is reverse-engineering the production Audi MHI2 firmware to determine how **Wireless CarPlay can be connected to the existing MHI2 CarPlay stack**.
 
-## What we've found
+## What we have proved
 
-The MHI2 firmware already contains the major building blocks involved in Wireless CarPlay, including Bluetooth, Wi-Fi, Apple connectivity, AirPlay and CarPlay.
+The firmware already contains the major pieces involved:
 
-A large part of the existing system has now been mapped from the firmware.
+- Marvell 8787 Wi-Fi and Bluetooth hardware
+- an existing WLAN/AP interface, `uap0`
+- Bluetooth iAP/iAP2 infrastructure
+- a real Bluetooth iAP transport in `iap`
+- DIO's CarPlay integration
+- mDNS / Bonjour
+- the AirPlay receiver
+- the existing USB CarPlay network interface, `carplay0`
+
+The Bluetooth side is now traced far enough to prove that a runtime-supplied endpoint reaches `CIapBTChannel::open64()`. Separately, DIO's current production iAP2 configuration uses `/dev/ipod0`.
 
 ## Where we are now
 
-The remaining work is to prove how those existing parts connect together for a complete wireless CarPlay session.
+The remaining problem is **not building a Wi-Fi stack**. The hardware and network infrastructure already exist.
 
-**Wireless CarPlay is not yet working or proven by this project.**
+The critical unresolved boundary is:
 
-We document what is proven, what is only partially understood, and what still needs to be traced.
+```text
+Bluetooth iAP
+    ↓
+runtime endpoint
+    ↓
+? same iAP2 resource-manager path ?
+    ↓
+DIO / CarPlay
+```
 
-[Read the full technical documentation →](docs/technical-readme.md)
+On the network side, we also still need to trace the actual AirPlay packet/multicast interface selection. The exported screen interface setters in this MU0678 build are no-op stubs, so they are not being treated as the selector.
+
+**Wireless CarPlay is not yet proven or working end-to-end.**
+
+The repository records proven findings, partial traces, disproven interpretations and remaining targets separately.
+
+### Start here
+
+- [Current status](STATUS.md)
+- [Roadmap](docs/roadmap.md)
+- [Technical documentation](docs/technical-readme.md)
+- [Evidence register](docs/evidence.md)
+- [Latest trace: Bluetooth iAP2 → DIO / AirPlay boundary](traces/TRACE-013-bluetooth-iap2-dio-airplay-boundary.md)
+
+> **Trace it. Prove it. Document it.**
