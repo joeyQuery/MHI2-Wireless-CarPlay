@@ -179,6 +179,6 @@ The path is therefore not compiled into `libiap2client.so`. It is supplied by th
 
 This is the first direct binary edge that changes the previous interpretation of the DIO boundary: `/dev/ipod0` is a production configuration/default path, not an intrinsic requirement of the `iap2_connect()` client ABI.
 
-The exact upstream construction of `r9` and whether the Bluetooth `CIapBTChannel` endpoint can reach this same DIO path remain unresolved.
+MU0678-specific evidence proves that DIO's client ABI is path-driven, but the MH2p reference shows a different production architecture: Bluetooth iAP2 is terminated by a separate bootstrap client and DIO's wireless-session iAP2 is carried through AirPlay. Therefore direct Bluetooth-endpoint substitution into DIO remains only a structural possibility, not the assumed target architecture. The MU0678 question is whether an equivalent bootstrap/session-side AirPlay path exists.
 
 **Evidence:** E-049, E-050, E-051. See TRACE-011.
