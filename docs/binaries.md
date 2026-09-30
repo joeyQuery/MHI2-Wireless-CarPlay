@@ -41,7 +41,7 @@ AirPlayReceiverSessionScreen_SetClientIfMACAddr
 | Component | Known role | Trace status |
 |---|---|---|
 | `bluetooth` | High-level production Bluetooth service | Partial |
-| `btstack` | Bluetooth protocol-stack process | Partial |
+| `btstack` | Independently supervised Bluetooth protocol-stack process; exact MU0678 artifact is present in the dump, but its internal iAP2 endpoint publisher is not yet statically decoded | Partial |
 | `libasimmxconnectivity_bluetooth_iapproxy.so` | Bluetooth-side iAP integration candidate | Partial |
 
 Relevant configuration:
