@@ -875,3 +875,27 @@ resmgr_attach @ 0x23fc84
 ```
 
 Evidence: exact MU0678 btstack ELF; IapServices vtable `0x2d0cc0`; registration helper `0x23799c`; registration method `0x237bdc`; SDP record `0x2d250c`; lower-level SDP routine `0x20be48`; IapDevice path `0x23c720`–`0x23c884`; resource-manager constructor `0x23fe24`; `resmgr_attach` call `0x23fc84`.
+
+
+## 19. IapServices embedded RFCOMM/event structure boundary
+
+The remaining `IapServices + 0x0c` lead was exercised further.
+
+The registration helper at `0x23799c` does not merely read the first byte of `this + 0x0c`; earlier in the same helper it passes the embedded regions to a generic btstack routine:
+
+```text
+0x2379e8  MOV r2, #0
+0x2379ec  MOV r0, r10          ; IapServices + 0x10
+0x2379f0  ADD r1, r5, #0x0c    ; IapServices + 0x0c
+0x2379f4  BL  0x242574
+```
+
+`0x242574` treats `r1` as an event/control structure: it reads byte `0` of that object, validates the event value, and then calls lower-level routine `0x2081ac` with the embedded object as the receiver/input. The same `0x242574` routine has two other callers elsewhere in btstack, so it is shared machinery rather than an IapServices-specific endpoint constructor.
+
+This closes another important boundary: the `+0x0c` member participates in an actual lower-level btstack event/control path before its first byte is copied into the SDP RFCOMM channel attribute.
+
+A full static search of the IapServices-adjacent code found no direct `STRB ..., [IapServices,#0x0c]` writer. The constructor only zeroes the embedded region. The remaining producer therefore appears behind the shared/local btstack event machinery or an indirect callback rather than as a simple local field assignment. The available binary does not justify assigning a BlueSDK function name to that producer.
+
+Additional callers of `0x242574` at `0x2563e0` and `0x25dbc0` confirm that the routine is generic/shared. The IapServices-specific edge is the `0x2379f0` call with `this+0x10` / `this+0x0c`.
+
+This is the current static exhaustion boundary for the channel source: the byte is consumed by IapServices registration, its embedded structure is fed into shared btstack event machinery, but the exact event producer that populates byte `0` is not exposed as a direct static store in the recovered image.
