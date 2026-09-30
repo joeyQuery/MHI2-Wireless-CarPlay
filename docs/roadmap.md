@@ -148,3 +148,10 @@ with each important edge backed by an evidence-register entry.
 Wireless CarPlay should not be marked implemented or end-to-end proven until the MHI2-specific Bluetooth bootstrap path, wireless-session handoff into DIO, session-side iAP2/AirPlay capability, and Wi-Fi/AirPlay interface-selection path are supported by MHI2-specific evidence. Do not require a direct Bluetooth endpoint → DIO `/dev/ipod0` handoff unless MHI2 evidence actually establishes that architecture.
 
 **Latest trace:** [TRACE-013 — Bluetooth iAP2 → DIO / AirPlay Boundary](../traces/TRACE-013-bluetooth-iap2-dio-airplay-boundary.md)
+
+
+### 2026-09-30 transport-boundary update
+
+The MU0678 bluetooth ELF is now directly inspected. Its enableIap/iapEnabled policy strings and switchBluetoothAccordingToConfig() branch are proven, but the exact config-field mapping is not yet closed. The high-level bluetooth executable also does not expose a recovered concrete iAP endpoint-construction/RFCOMM-server API.
+
+The MH2p reference provides a concrete reference-only endpoint pattern: btstack creates /dev/iapDevice-<BT address> after the iAP2 probe bytes and reports it through updIapDevicePath. This is now the exact byte/string/function signature set to test against MU0678. It must not be promoted to MU0678 evidence until the MU0678 btstack ELF or a runtime capture confirms it.
