@@ -177,3 +177,13 @@ The remaining static endpoint targets are therefore the producer of the IapServi
 The remaining RFCOMM-channel source was traced into shared btstack machinery. IapServices passes `this+0x10` and `this+0x0c` to shared routine `0x242574`; that routine consumes byte 0 of the `+0x0c` structure and calls lower-level routine `0x2081ac`. Other callers prove `0x242574` is shared machinery. No direct IapServices byte-0 writer was recovered, so the exact event producer/indirect BlueSDK callback remains unresolved.
 
 This is the current static exhaustion boundary for the channel source. Do not invent a BlueSDK function name or map the byte to a BT address without runtime or additional binary evidence.
+
+### 2026-09-30 exhaustive twelve-target static campaign
+
+TRACE-014 re-audits all twelve remaining static targets in one pass: iAP2 transport construction, Wi-Fi configuration/AP handoff, DIO iAP2/session transition, IapDeviceServices publication, btstack endpoint naming, IapServices RFCOMM channel production, DIO AirPlay interfaceName population, AirPlay socket-helper callers, MDNS_DIRECTLINK_IFACE propagation, BluetoothSmartphoneIntegration/CarPlay state, ipod-drvr-iap2 mountpoint construction, and boot/configuration dependency ordering.
+
+The important result is not that Wireless CarPlay is complete; it is that each target now has a concrete stopping boundary. The MU0678 btstack endpoint is proven through btstack::IapDevice, /dev/iapDevice, iPL string-state construction and resmgr_attach, while a direct search proves that the MH2p /dev/iapDevice-<BT-address> and updIapDevicePath literals are absent from the exact MU0678 btstack ELF. The RFCOMM channel source is narrowed to IapServices +0x0c → shared 0x242574 → 0x2081ac, with no direct byte-0 writer recovered.
+
+The remaining open items are therefore the exact producer/consumer edges listed in TRACE-014, not a need to rediscover the surrounding subsystems.
+
+**Latest trace:** [TRACE-014 — Exhaustive Static Campaign: 12 Remaining Wireless CarPlay Traces](../traces/TRACE-014-exhaustive-static-campaign-12.md)
