@@ -39,7 +39,7 @@ The target diagram describes the investigation target, not a completed implement
 
 ## Highest-Value Open Questions
 
-1. What exact code branch in `bluetooth` consumes `enableIap=false`?
+1. What exact code branch in `bluetooth` maps `enableIap` / `iapEnabled` onto the application state?
 2. What exact endpoint path does `IapDeviceServices` return to `CIapBTChannel`?
 3. Does that Bluetooth endpoint equal DIO's `/dev/ipod0`, or is it a different resource-manager path?
 4. How does the production boot path export `MDNS_DIRECTLINK_IFACE=carplay0` into the running `mdnsd` environment?
@@ -93,4 +93,4 @@ The repository now has thirteen explicit trace artifacts for the highest-value t
 
 ## Immediate Research State
 
-The project is currently in the **transport-boundary tracing** phase. The highest-value static blocker is now the Bluetooth endpoint construction/ownership path inside the production `bluetooth` executable, with runtime endpoint capture as the alternative route. The next implementation decisions should be based on concrete traces of Bluetooth/iAP2, DIO, mDNS and AirPlay rather than on the existence of firmware components alone.
+The project is currently in the **transport-boundary tracing** phase. The MU0678 `bluetooth` executable is now directly inspectable. Its iAP policy strings and `switchBluetoothAccordingToConfig()` branch are proven, but the exact `enableIap` field mapping and concrete endpoint publisher remain unresolved. The highest-value static target has therefore moved downward to the service-mediated endpoint publication path / `btstack`, with runtime endpoint capture as the alternative route. The next implementation decisions should be based on concrete traces of Bluetooth/iAP2, DIO, mDNS and AirPlay rather than on the existence of firmware components alone.
