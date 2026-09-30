@@ -18,4 +18,4 @@ The remaining work is to prove how those existing parts connect together for a c
 
 We document what is proven, what is only partially understood, and what still needs to be traced.
 
-[Read the full technical documentation →](technical-readme.md)
+[Read the full technical documentation →](docs/technical-readme.md)
