@@ -23,6 +23,7 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 - [x] Prove active-device information reaches `CIapBTChannel::updateiAPDevice()`
 - [x] Prove the Bluetooth endpoint reaches `open64()`
 - [x] Establish that the Bluetooth `iap` binary does not hard-code `/dev/ipod0`
+- [ ] Resolve the `enableIap` configuration parser/control-flow branch
 - [ ] Recover the exact endpoint value/path supplied by the Bluetooth service
 - [ ] Identify the owner/creator of that endpoint
 - [ ] Determine whether the endpoint is the same mounted QNX iAP2 resource-manager service used by `ipod-drvr-iap2.so`
