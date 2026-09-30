@@ -64,7 +64,7 @@ The important finding is that the existing CarPlay implementation is not simply 
 
 # Wireless CarPlay Target
 
-The target architecture is to preserve the existing DIO / AirPlay / CarPlay stack while replacing the USB-specific transport dependencies. All edges in the target diagram are unresolved targets, not proven execution edges.
+The target architecture is to preserve the existing DIO / AirPlay / CarPlay stack while replacing only the USB-specific transport dependencies. The latest trace has now proven the Bluetooth iAP transport and narrowed the remaining boundary to the runtime endpoint supplied to CIapBTChannel and its relationship to the DIO/iAP2 resource-manager path. Target/inference edges remain explicitly unresolved.
 
 ~~~mermaid
 flowchart TB
@@ -186,7 +186,7 @@ It also references:
 _airplay._tcp.
 ~~~
 
-The production library's `_UpdateBonjourAirPlay` path now provides a concrete interface-selection edge: its `interfaceName` field is converted with `if_nametoindex()` and the resulting interface index is supplied to `DNSServiceRegister()`. The previously suspected screen setter APIs are production no-ops, so they are no longer treated as the presumed transport selector.
+The production library's `_UpdateBonjourAirPlay` path provides a concrete Bonjour interface-selection edge: its `interfaceName` field is converted with `if_nametoindex()` and the resulting interface index is supplied to `DNSServiceRegister()`. The previously suspected screen setter APIs are production no-ops and are no longer treated as transport selectors. The remaining task is to recover where `interfaceName` is populated and how the substantive packet/multicast socket helpers are called.
 
 See **[AirPlay](docs/airplay.md)**.
 
@@ -267,27 +267,13 @@ The actual interface-selection path must first be traced through DIO, mDNS and A
 
 # Highest-Value Unknowns
 
-### 1. Bluetooth → iAP2
+### 1. Bluetooth → iAP2 endpoint
 
-What exactly does:
-
-~~~text
-enableIap=false
-~~~
-
-disable?
-
-Does enabling the existing Bluetooth iAP infrastructure produce the transport that DIO expects, or is additional adaptation required?
+The production `iap` path is now established through `CIapBTChannel` and `IapDeviceServices`. `openiAPDevice()` reaches `open64()` with a runtime-supplied endpoint. The exact endpoint value and its owner are still unresolved. The next question is whether that endpoint terminates at the same QNX iAP2 resource-manager ABI already proven for `libiap2client.so` / `ipod-drvr-iap2.so`.
 
 ### 2. DIO's iAP2 transport boundary
 
-Is the production /dev/ipod0 dependency:
-
-- a configuration choice;
-- a transport abstraction with a USB implementation;
-- or a hard-coded USB dependency?
-
-This must be resolved from the binary call path.
+`/dev/ipod0` is now proven to be a caller-supplied path rather than an intrinsic `iap2_connect()` ABI restriction. What remains unresolved is whether the Bluetooth runtime endpoint can terminate at the same resource-manager service and feed the existing DIO state machine.
 
 ### 3. MDNS_DIRECTLINK_IFACE
 
@@ -421,3 +407,14 @@ Always retain original files, hashes and a reliable recovery path before experim
 The documentation authority hierarchy is defined in [`docs/source-of-truth.md`](docs/source-of-truth.md). Execution traces in [`traces/`](traces/README.md) are the authoritative place for recovered call/data-flow edges; architectural diagrams may contain dashed target/inference edges and must not be read as proof.
 
 > **Trace it. Prove it. Document it.**
+
+
+---
+
+# Latest Trace State
+
+TRACE-013 consolidates the current transport-boundary result. The production Bluetooth iAP2 subsystem is proven, including `CIapBTChannel`, its connector state machine, and the `IapDeviceServices` RPC boundary. The Bluetooth endpoint is runtime-supplied and reaches `open64()`, but its exact value and relationship to the iAP2 resource-manager service remain unresolved. DIO independently uses a caller-supplied `/dev/ipod0` path, and the iAP2 client/driver message ABI is already proven in TRACE-012.
+
+The AirPlay side is similarly narrowed: Bonjour registration uses the AirPlay object's `interfaceName`, while the screen interface setters are production no-ops. The remaining AirPlay work is to recover the population of `interfaceName` and the call arguments for packet/multicast interface helpers.
+
+See **[TRACE-013](../traces/TRACE-013-bluetooth-iap2-dio-airplay-boundary.md)**.
