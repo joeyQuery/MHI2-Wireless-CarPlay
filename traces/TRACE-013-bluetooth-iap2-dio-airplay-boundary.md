@@ -608,3 +608,113 @@ Coding Phone allowed
 This is nevertheless a major architectural correction: `enableIap` belongs to the **Bluetooth topology/reconnect policy layer** that decides how Bluetooth connectivity is re-evaluated, rather than to the `+0x1182/+0x1186/+0x118A` vehicle-coding flags or to the low-level btstack process directly.
 
 **Evidence:** MU0678 `bluetooth` ELF; `0x17b280` consumer, callers `0x17b598`, `0x17b938`, `0x17baf4`; GOT relocation `0x24cd74` for `FecAppMMXProxy::getIName()::iname`; reconnect/topology strings and configuration keys in the same production image.
+
+
+## 16. Exhausted the `enableIap` consumer into the reconnect/topology machinery
+
+The direct consumer was traced one level further through all recovered callers. The important result is that the `enableIap` read is embedded in normal Bluetooth topology/reconnect processing, not in an iAP endpoint constructor.
+
+### 16.1 Caller at 0x17b598
+
+The caller at `0x17b330`..`0x17b5ac` operates on a topology/reconnect data structure in `r7`. Before the `enableIap` helper it performs two other object operations and then executes:
+
+```text
+0x17b584  MOV r0,r7
+0x17b588  BL  0x17aee4
+0x17b58c  MOV r0,r7
+0x17b590  BL  0x178ea8
+0x17b594  MOV r0,r7
+0x17b598  BL  0x17b280
+```
+
+The same object pointer is therefore passed through the preceding topology operations and directly into the `enableIap` consumer. There is no intervening iAP/RFCOMM endpoint API call.
+
+### 16.2 Caller at 0x17baf4
+
+A second caller uses a different object pointer held in `r4`:
+
+```text
+0x17bae0  MOV r1,r5
+0x17bae4  BL  0x1788dc
+0x17bae8  MOV r0,r4
+0x17baec  BL  0x1798dc
+0x17baf0  MOV r0,r4
+0x17baf4  BL  0x17b280
+```
+
+Again, the helper is reached as part of object/list processing. The receiver is not produced by an iAP transport-open operation. The exact identity of this `r4` object remains a local data-flow question, but the call chain contains no concrete endpoint creation.
+
+### 16.3 The true branch is still topology/reconnect work
+
+The `enableIap != 0` arm at `0x17b2dc` calls `0x179e34` with:
+
+```text
+r0 = CBluetoothTopologyReconnect object
+r1 = helper-local state object
+```
+
+and then joins the common operation at `0x179618`:
+
+```text
+0x17b2dc  MOV r0,r5
+0x17b2e0  MOV r1,r4
+0x17b2e4  BL  0x179e34
+0x17b2e8  B   0x17b2c4
+0x17b2c4  MOV r0,r4
+0x17b2c8  BL  0x179618
+```
+
+The false arm instead consults the FEC application object through GOT slot `0x688`, checks its `+0x38` state against `3`, and only then enters the same `0x179618` operation. This is a policy/topology decision structure, not an endpoint-open structure.
+
+### 16.4 No hidden iAP API appears in the exhausted bluetooth ELF surface
+
+A full static name/import/string sweep of the available MU0678 `bluetooth` ELF found:
+
+- `iapEnabled`
+- `bluetooth.enableIap`
+- `SERVICETYPE_IAP2`
+- `ERROR_CARPLAY_ACTIVE`
+- RFCOMM/service error vocabulary
+- Bluetooth service/proxy registrations
+
+but did **not** recover:
+
+- `IapDeviceServices` in the executable's own strings/symbols;
+- `CIapBTChannel`;
+- `updIapDevicePath`;
+- `/dev/iapDevice-`;
+- the MH2p iAP2 accessory UUID;
+- the iAP2 detect sequence `FF 55 02 00 EE 10`;
+- a concrete RFCOMM-server creation API;
+- a concrete iAP endpoint `open64()` call.
+
+This is stronger than the earlier symbol-only negative result: the executable visibly knows about the **iAP2 service type and admission/policy state**, but the byte/string/function surface needed to prove that it itself creates the Bluetooth iAP2 resource-manager endpoint is absent.
+
+### 16.5 Exhaustion boundary
+
+The static trace from `bluetooth.enableIap` is therefore exhausted at the following boundary:
+
+```text
+bluetooth.enableIap
+        |
+        v
+CBluetoothTopologyReconnect +0x28
+        |
+        v
+0x17b280 policy helper
+        |
+        +--> reconnect/topology operation 0x179e34
+        |        |
+        |        +--> common operation 0x179618
+        |
+        +--> FEC-state-gated common operation 0x179618
+
+        X--> no recovered edge to IapDeviceServices
+        X--> no recovered edge to CIapBTChannel/open64
+        X--> no recovered edge to RFCOMM endpoint creation
+        X--> no recovered edge to btstack startup
+```
+
+This closes the currently available MU0678 `bluetooth` ELF trace. The remaining endpoint-owner question cannot be answered statically from this ELF alone. The exact MU0678 `btstack` ELF (1,912,117-byte artifact previously identified in the dump) is now the decisive missing binary for continuing this branch; alternatively, a runtime trace of the `IapDeviceServices` active-device callback containing the endpoint path would close it without btstack internals.
+
+**Evidence:** MU0678 `bluetooth` ELF; callers `0x17b598`, `0x17b938`, `0x17baf4`; helper `0x17b280`; branches `0x17b2dc`–`0x17b2e8`; common operation `0x179618`; negative string/import sweep.
