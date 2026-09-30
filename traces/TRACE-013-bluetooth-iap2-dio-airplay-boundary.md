@@ -392,3 +392,48 @@ The earlier search target was too broad. The GLOB_DAT question is now closed at 
 - The remaining MU0678 interface-selection question is the identity of the property object passed into the dispatcher and the separate path that would populate `interfaceName`.
 
 Therefore the active next AirPlay target is no longer the GLOB_DAT relocation itself; it is the property-object construction/population feeding `AirPlayReceiverServerSetProperty`.
+
+## 13. Instruction-level refinement: Bluetooth configuration gate
+
+The locally inspected MU0678 ELF closes one more part of the configuration-control trace without changing the unresolved field-name mapping.
+
+The caller is concrete:
+
+```text
+CBluetoothApplication::diagCBCodingValues(...)  @ 0x146500
+    |
+    +-- bl 0x13df18
+            |
+            v
+CBluetoothApplication::switchBluetoothAccordingToConfig()
+```
+
+The first decision sequence in `switchBluetoothAccordingToConfig()` is:
+
+```text
+0x13df40: MOVW r3, #0x1182
+0x13df44: LDRB r3, [r5, r3]
+0x13df48: CMP  r3, #0
+0x13df4c: BEQ  ...
+
+0x13df50: MOVW r3, #0x1186
+0x13df54: LDRB r3, [r5, r3]
+0x13df58: CMP  r3, #0
+0x13df5c: BNE  ...
+
+0x13df78: MOVW r3, #0x118A
+0x13df7c: LDRB r3, [r5, r3]
+0x13df80: CMP  r3, #0
+0x13df84: BEQ  ...
+```
+
+So the following is now **proven**:
+
+- these are object-relative byte fields, not guessed constants;
+- all three are consumed by the real Bluetooth configuration-control function;
+- the function is reached from `diagCBCodingValues()` at `0x146500`;
+- the fields participate in the branch that decides whether the Bluetooth reconfiguration path proceeds.
+
+What remains **unproven** is which field corresponds to which named configuration item. In particular, the presence of the strings `iapEnabled` and `bluetooth.enableIap` elsewhere in the ELF is not sufficient to assign either string to `+0x1182`, `+0x1186`, or `+0x118A`.
+
+This therefore narrows the next static target to the code that populates those fields from the configuration object, rather than treating `enableIap=false` as already mapped to one of them.
