@@ -170,13 +170,11 @@ The MU0678 btstack trace now closes the SDP-byte writer. IapServices registratio
 
 The endpoint path is also narrowed: `0x23c720` loads the exact `/dev/iapDevice` string, constructs an iPL string-state object, and passes it into the resource-manager construction path ending at `resmgr_attach()` `0x23fc84`. MU0678-specific evidence still does not prove the MH2p `/dev/iapDevice-<BT address>` suffix convention.
 
-The remaining static endpoint targets are therefore the producer of the IapServices channel byte and the BT-address-to-final-endpoint pathname data-flow. Everything upstream of those boundaries is now concrete MU0678 evidence.
+The remaining static endpoint targets are the BT-address-to-final-endpoint pathname data-flow and the exact connected-device publication edge. The IapServices RFCOMM channel producer has since been closed by tracing 0x2379f0 -> 0x242574 -> 0x2081ac -> SDP byte 0x2d2519.
 
 ### 2026-09-30 IapServices embedded-event boundary
 
-The remaining RFCOMM-channel source was traced into shared btstack machinery. IapServices passes `this+0x10` and `this+0x0c` to shared routine `0x242574`; that routine consumes byte 0 of the `+0x0c` structure and calls lower-level routine `0x2081ac`. Other callers prove `0x242574` is shared machinery. No direct IapServices byte-0 writer was recovered, so the exact event producer/indirect BlueSDK callback remains unresolved.
-
-This is the current static exhaustion boundary for the channel source. Do not invent a BlueSDK function name or map the byte to a BT address without runtime or additional binary evidence.
+The remaining RFCOMM-channel source was traced into shared btstack machinery. IapServices passes `this+0x10` and `this+0x0c` to shared routine `0x242574`; that routine consumes byte 0 of the `+0x0c` structure and calls lower-level routine `0x2081ac`. Other callers prove `0x242574` is shared machinery. The direct IapServices STRB writer is still not a separate high-level function: allocation occurs in shared 0x2081ac and the resulting byte is consumed by the IapServices registration path. Do not invent a BlueSDK function name for the higher-level trigger.
 
 ### 2026-09-30 exhaustive twelve-target static campaign
 
