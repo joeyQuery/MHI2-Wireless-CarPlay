@@ -23,7 +23,7 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 - [x] Prove active-device information reaches `CIapBTChannel::updateiAPDevice()`
 - [x] Prove the Bluetooth endpoint reaches `open64()`
 - [x] Establish that the Bluetooth `iap` binary does not hard-code `/dev/ipod0`
-- [ ] Resolve the `enableIap` configuration parser/control-flow branch
+- [x] Resolve the `enableIap` configuration parser/control-flow branch
 - [ ] Recover the exact endpoint value/path supplied by the Bluetooth service
 - [ ] Identify the owner/creator of that endpoint
 - [ ] Determine whether the endpoint is the same mounted QNX iAP2 resource-manager service used by `ipod-drvr-iap2.so`
@@ -187,3 +187,16 @@ The important result is not that Wireless CarPlay is complete; it is that each t
 The remaining open items are therefore the exact producer/consumer edges listed in TRACE-014, not a need to rediscover the surrounding subsystems.
 
 **Latest trace:** [TRACE-014 — Exhaustive Static Campaign: 12 Remaining Wireless CarPlay Traces](../traces/TRACE-014-exhaustive-static-campaign-12.md)
+
+
+### 2026-09-30 expanded static mapping update — TRACE-015
+
+Two previously unresolved boundaries are now closed.
+
+**Bluetooth iAP policy:** `bluetooth.enableIap` is proven to be the property read into `CBluetoothTopologyReconnect +0x28` by the constructor at `0x155178` through the configuration reader `0x155060 -> 0x154c3c`. The cached byte is consumed by `0x17b280` as Bluetooth topology/reconnect policy. This does not make it a btstack startup switch.
+
+**RFCOMM channel:** the IapServices channel byte is no longer an unresolved indirect source. `0x2379f0 -> 0x242574 -> 0x2081ac` reaches the internal btstack channel allocator. When the supplied byte is zero, `0x2081ac` scans the internal channel table and writes an allocated RFCOMM channel into the IapServices `+0x0c` storage. `0x23799c` then copies that byte into SDP byte `0x2d2519` and registers the record through `0x20be48`.
+
+This removes the RFCOMM channel producer from the remaining blocker list. The endpoint pathname and IapDeviceServices publication are still separate unresolved boundaries.
+
+**Latest trace:** [TRACE-015 — Expanded Static Mappings](../traces/TRACE-015-expanded-static-mappings.md)
