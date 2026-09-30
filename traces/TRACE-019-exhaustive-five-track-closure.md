@@ -219,3 +219,81 @@ D. AirPlay interfaceName population
 E. live 0x5702/0x5703 activation and credential source
 
 Everything below those boundaries that the available MU0678 binaries expose has been traced as far as the artifacts permit.
+
+
+## Recursive follow-up: the 0x9999 ABI is not the Bluetooth convergence layer
+
+The five-track follow-up exposed an important architectural question: can MU0678 simply point DIO's existing `iap2_connect()` at the Bluetooth `IapDevice` pathname?
+
+The evidence says **do not do that**.
+
+MU0678's `libiap2client.so::iap2_connect()` opens its caller-supplied pathname and then sends the fixed 20-byte QNX control message containing the `0x9999` marker. The matching receiver is `ipod-drvr-iap2.so::iap2_msg()`, which recognizes the same marker and replies with 2.
+
+That ABI is therefore specifically the client-to-`ipod-drvr-iap2.so` resource-manager boundary.
+
+The Bluetooth `IapDevice` is a separate btstack resource-manager endpoint. The MH2p production reference proves the corresponding architectural distinction: its Bluetooth node carries raw iAP2 link bytes, while the userland Bluetooth bootstrap client performs the iAP2 link layer on top of the byte stream. DIO's session-side iAP2 is then carried through AirPlay, not by redirecting the USB iAP2 client to the Bluetooth node.
+
+This is cross-platform reference evidence for the architectural distinction; MU0678-specific btstack read/write internals were not directly recoverable through the current GitHub binary interface. Therefore the precise MU0678 statement is:
+
+**Proven:** the 0x9999 ABI is the `libiap2client` ↔ `ipod-drvr-iap2.so` boundary.
+
+**Proven:** the Bluetooth endpoint is owned by btstack and consumed by `CIapBTChannel`.
+
+**Not proven:** that MU0678's Bluetooth endpoint itself implements the 0x9999 ABI.
+
+Consequently, redirecting DIO's `iap2_connect()` from `/dev/ipod0` to the Bluetooth endpoint is not supported by the evidence and should not be the implementation strategy.
+
+## Recursive follow-up: the likely missing component class is now constrained
+
+The available evidence contains a dedicated MU0678 `iap` process with `CIapBTChannel`, but no recovered production launcher edge proving when that process is started. The MH2p descendant is explicitly a small userland iAP2-over-Bluetooth client, and the MH2p wireless bootstrap uses a separate client of this type.
+
+Therefore the unresolved MU0678 question is no longer "how do we make the Bluetooth resource-manager endpoint speak iAP2?" It already exposes the Bluetooth transport endpoint and a userland consumer.
+
+The remaining question is whether the existing MU0678 `iap` process contains enough **Wi-Fi provisioning / WirelessCarPlay control logic** to be the bootstrap client, or whether a separate bootstrap process is required.
+
+No recovered MU0678 evidence currently establishes:
+- `WirelessCarPlayUpdate` handling in `iap`;
+- `DeviceTransportIdentifierNotification` handling in `iap`;
+- a live 0x5702 request originating from `iap`;
+- an AP credential provider connected to `iap`;
+- a wireless session-start controller.
+
+That narrows the implementation search to the existing `iap`/Bluetooth service boundary and the iAP2 driver transport objects before introducing a new process.
+
+## Recursive follow-up: the AirPlay control-plane gap is genuine
+
+A repository-wide search for the MH2p receiver-side control-plane signatures found no MU0678 implementation of:
+
+- `_carplay-ctrl._tcp`
+- `CarPlayControlClient`
+- `CarPlayControllerGetBluetoothMacAddress`
+- `GET /ctrl-int/1/connect`
+- `AirPlay-Receiver-Device-ID`
+- `AirPlayReceiverSessionSendiAPMessage`
+- `iAPSendMessage`
+
+The MH2p reference shows these are not cosmetic helpers: they provide the wireless controller discovery, BT-MAC correlation, session trigger, and session-side iAP2 tunnel.
+
+Therefore the absence is implementation-relevant. MU0678 cannot be made Wireless CarPlay merely by enabling its existing AirPlay Bonjour server.
+
+A different AirPlay-generation protocol could theoretically replace this sequence, but no MU0678-specific substitute was recovered.
+
+## Recursive follow-up: 0x5702 is a responder, not yet a bootstrap
+
+The MU0678 `wifi_acc_config_info()` handler is real and constructs the expected 0x5703 fields. However, exhaustive repository searches did not recover a MU0678 equivalent of the MH2p credential-provider/orchestrator chain:
+
+`connectionmanager WlanService → WiFiAPInfoProvider → bootstrap iAP2 client → 0x5703`.
+
+The presence of `uap0` and the handler therefore answers only the protocol question: **MU0678 knows how to answer the request.**
+
+It does not answer the activation question: **which live Bluetooth iAP2 client sends the request and supplies the AP credentials?**
+
+That producer/activation edge remains genuinely absent from the recovered MU0678 evidence.
+
+## Recursive follow-up: current five-track answers
+
+1. **Bluetooth → iAP2:** the Bluetooth transport endpoint and its consumer are real. The existing USB/DIO 0x9999 client ABI is not the proven Bluetooth transport ABI.
+2. **BT MAC:** the phone MAC is stored in btstack, but the recovered MU0678 evidence does not carry it through to Wi-Fi/AirPlay session selection.
+3. **Control plane:** the MH2p wireless controller/session-start mechanism is absent from the recovered MU0678 surface; no replacement has been proven.
+4. **AirPlay interface:** the consumer and property-dispatch path are real; the exact `interfaceName` property writer/value remains unresolved.
+5. **0x5702/0x5703:** the responder is compiled and functional at the protocol level; its live bootstrap/credential source is not connected to the production Bluetooth path in the recovered evidence.
