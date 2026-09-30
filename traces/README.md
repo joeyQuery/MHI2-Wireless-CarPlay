@@ -30,6 +30,7 @@ No target arrow is evidence by itself.
 | [TRACE-012](TRACE-012-iap2-client-resource-manager.md) | MU0678 iAP2 client → driver resource-manager boundary | Complete |
 | [TRACE-013](TRACE-013-bluetooth-iap2-dio-airplay-boundary.md) | MU0678 Bluetooth iAP2 → DIO / AirPlay boundary | Partial |
 | [TRACE-014](TRACE-014-exhaustive-static-campaign-12.md) | Exhaustive static campaign across the twelve remaining Wireless CarPlay targets | Partial |
+| [TRACE-015](TRACE-015-expanded-static-mappings.md) | Expanded Bluetooth policy and RFCOMM channel producer mappings | Partial |
 
 ## Trace record format
 
