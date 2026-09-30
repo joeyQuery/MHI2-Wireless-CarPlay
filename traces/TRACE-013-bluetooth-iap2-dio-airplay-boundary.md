@@ -209,7 +209,7 @@ The network-side investigation should continue independently of the Bluetooth en
 - **Proven:** DIO's current configured iAP2 path is `/dev/ipod0`.
 - **Proven:** AirPlay has substantive Wi-Fi/interface/socket primitives.
 - **Disproven/corrected:** the three screen interface/transport setters are not active selectors in this production build.
-- **Partial:** Bluetooth endpoint → iAP2 resource-manager/DIO handoff.
+- **Partial:** Bluetooth endpoint → iAP2 bootstrap/client handoff; a direct Bluetooth endpoint → DIO handoff is not established and should not be assumed.
 - **Partial:** DIO/AirPlay runtime interface selection.
 - **Not yet proven:** end-to-end Wireless CarPlay.
 
@@ -220,7 +220,7 @@ E-014 through E-031, E-049 through E-055.
 ## Related traces
 
 - TRACE-001 — Bluetooth → iAP2
-- TRACE-002 — DIO → iAP2 transport
+- TRACE-002 — DIO → iAP2 transport / path-driven client boundary
 - TRACE-003 — MDNS_DIRECTLINK_IFACE
 - TRACE-004 — DIO → AirPlay
 - TRACE-005 — AirPlay → socket/interface
