@@ -198,3 +198,7 @@ Two previously unresolved boundaries are now closed.
 This removes the RFCOMM channel producer from the remaining blocker list. The endpoint pathname and IapDeviceServices publication are still separate unresolved boundaries.
 
 **Latest trace:** [TRACE-015 — Expanded Static Mappings](../traces/TRACE-015-expanded-static-mappings.md)
+
+### 2026-09-30 endpoint pathname refinement — TRACE-016
+
+The IapDevice endpoint boundary is now narrower. The exact pathname consumed by QNX is IapDevice+0x0c -> resmgr_attach(). The pathname is copied from a runtime source pointer/length pair immediately before construction. The compiled /dev/iapDevice literal participates in the surrounding creation path, but final equality to that literal or an MH2p BT-address suffix is not proven. The remaining static target is specifically the producer of the source pair.
