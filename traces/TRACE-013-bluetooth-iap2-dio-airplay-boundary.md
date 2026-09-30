@@ -822,3 +822,56 @@ btstack
 The direct enableIap -> btstack edge remains unproven. What is now proven is that the previously missing endpoint/RFCOMM machinery exists inside the independently supervised MU0678 btstack process, while enableIap remains a higher-level Bluetooth topology/reconnect policy flag.
 
 Evidence: exact uploaded MU0678 btstack ELF; IapDevice vtable; resmgr_attach @ 0x23fc84; resource-manager construction @ 0x23fe24; /dev/iapDevice @ file 0x1bf790; IapServices vtable; SDP record @ 0x2d250c; IapDeviceServices name pointer @ 0x2d2508; IapServices register/deregister strings and helper references.
+
+## 18. MU0678 btstack RFCOMM channel and endpoint-path refinement
+
+The exact MU0678 btstack ELF was traced one level beyond the previous endpoint closure.
+
+### 18.1 The SDP channel-byte write is concrete
+
+The IapServices registration path reaches helper `0x23799c`. It reads `IapServices + 0x0c` and writes that byte to the RFCOMM channel attribute at `0x2d250c + 0x0d = 0x2d2519`, then calls lower-level SDP routine `0x20be48`.
+
+The literal-pool entry at `0x237bd0` resolves directly to `0x2d250c`, the exact MU0678 iAP2 SDP record. This proves the SDP-byte writer. It does not yet prove the producer of `IapServices + 0x0c`.
+
+### 18.2 Correction to the channel-source description
+
+The earlier shorthand that described `r5 + 0x0c` as a separate channel object was too strong. At `0x23799c`, `r5` is the IapServices receiver passed by the vtable method at `0x237bdc`. The IapServices constructor at `0x2392f0` explicitly zero-initializes the embedded region beginning at `this + 0x0c`.
+
+Therefore the first byte consumed as the RFCOMM channel belongs to an embedded IapServices member/structure. Its exact type and the function that populates its first byte remain unresolved.
+
+### 18.3 Lower-level SDP registration
+
+After preparing the record, `0x237ac0` calls local routine `0x20be48`. The exact stripped/local BlueSDK symbol name is intentionally left unassigned. The same routine has multiple callers elsewhere in btstack, confirming it is shared lower-level SDP machinery.
+
+### 18.4 Endpoint base-path construction
+
+The IapDevice creation path begins at `0x23c720` and loads the exact string `/dev/iapDevice` from `0x2bf790`, calls `strlen`, constructs an `ipl::basic_string::State`, and proceeds into the resource-manager constructor at `0x23fe24`, which reaches `resmgr_attach()` at `0x23fc84`.
+
+No MU0678-specific evidence recovered so far establishes an MH2p-style `-<BT address>` suffix. The compiled `/dev/iapDevice` base and the resource-manager attach path are proven; the final runtime pathname representation and BT-address-to-endpoint data-flow remain separate unresolved questions.
+
+### 18.5 Remaining endpoint boundary
+
+```text
+IapServices + 0x0c first byte
+        |
+        +--> [producer unresolved]
+        |
+        v
+SDP RFCOMM channel byte @ 0x2d2519
+        |
+        v
+BlueSDK SDP registration @ 0x20be48
+
+/dev/iapDevice string @ 0x2bf790
+        |
+        v
+ipl::basic_string::State
+        |
+        v
+IapDevice resource-manager constructor @ 0x23fe24
+        |
+        v
+resmgr_attach @ 0x23fc84
+```
+
+Evidence: exact MU0678 btstack ELF; IapServices vtable `0x2d0cc0`; registration helper `0x23799c`; registration method `0x237bdc`; SDP record `0x2d250c`; lower-level SDP routine `0x20be48`; IapDevice path `0x23c720`–`0x23c884`; resource-manager constructor `0x23fe24`; `resmgr_attach` call `0x23fc84`.
