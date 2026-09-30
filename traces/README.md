@@ -33,6 +33,7 @@ No target arrow is evidence by itself.
 | [TRACE-015](TRACE-015-expanded-static-mappings.md) | Expanded Bluetooth policy and RFCOMM channel producer mappings | Partial |
 | [TRACE-016](TRACE-016-iapdevice-pathname-dataflow.md) | IapDevice pathname source to resmgr_attach boundary | Partial |
 | [TRACE-017](TRACE-017-iapdevice-bt-address-pathname-boundary.md) | IapDevice Bluetooth-address fields and pathname provenance boundary | Partial |
+| [TRACE-018](TRACE-018-iapdevice-cbrf-iapdeviceservices.md) | cbRf event dispatch and IapDeviceServices reply surface | Partial |
 
 ## Trace record format
 
