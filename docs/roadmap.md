@@ -28,7 +28,9 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 - [ ] Identify the owner/creator of that endpoint
 - [ ] Determine whether the endpoint is the same mounted QNX iAP2 resource-manager service used by `ipod-drvr-iap2.so`
 - [ ] Correlate the Bluetooth endpoint with the concrete iAP2 message ABI proven in TRACE-012
-- [ ] Trace the resulting iAP2 session into DIO
+- [ ] Determine whether Bluetooth iAP2 is a bootstrap/control-plane path separate from DIO's session-side iAP2
+- [ ] Trace the resulting Bluetooth bootstrap into Wi-Fi session activation
+- [ ] Determine whether MU0678 has a session-side iAP2-over-AirPlay path comparable to the MH2p reference
 
 **Current boundary:** TRACE-013. The Bluetooth implementation is proven; the endpoint ownership and DIO handoff are not.
 
@@ -40,7 +42,8 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 - [x] Prove the iAP2 client/driver resource-manager ABI
 - [ ] Determine whether DIO can consume the Bluetooth-side endpoint without a new transport ABI
 - [ ] Recover the iAP2 connection/disconnection state transitions for the wireless path
-- [ ] Establish the exact Bluetooth iAP2 → DIO handoff
+- [ ] Establish whether there is any direct Bluetooth iAP2 → DIO handoff (do not assume one)
+- [ ] Establish the actual wireless-session handoff into DIO
 
 **Dependency:** the Bluetooth endpoint trace must identify the actual endpoint before an implementation point is selected.
 
@@ -53,7 +56,9 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 - [x] Prove AirPlay Bonjour registration uses its `interfaceName` field
 - [x] Prove the production screen interface/transport/client-MAC setters are no-op stubs
 - [x] Prove substantive packet-receive and multicast interface helpers exist
-- [ ] Recover where AirPlay `interfaceName` is populated
+- [ ] Recover where AirPlay `interfaceName` is populated in MU0678
+- [x] Close the GLOB_DAT linkage question for `AirPlayReceiverServerSetProperty` (active indirect callback proven)
+- [ ] Identify the property object/name supplied at the recovered MU0678 callback sites
 - [ ] Trace callers and arguments of `SocketSetPacketReceiveInterface`
 - [ ] Trace callers and arguments of `SocketSetMulticastInterface`
 - [ ] Prove how the production boot path exports `MDNS_DIRECTLINK_IFACE=carplay0` into `mdnsd`
@@ -66,7 +71,8 @@ This roadmap is dependency-oriented. A checkbox means the repository has establi
 
 - [ ] Correlate Bluetooth phone identity with Wi-Fi association
 - [ ] Correlate Bluetooth/iAP2 endpoint identity with the same phone
-- [ ] Correlate iAP2 events with DIO CarPlay request/state
+- [ ] Correlate Bluetooth bootstrap/iAP2 events with DIO CarPlay request/state
+- [ ] Determine whether session-side iAP2 is carried through AirPlay on MU0678
 - [ ] Correlate mDNS/AirPlay discovery with the same DIO session
 - [ ] Produce one timestamped end-to-end Wireless CarPlay trace
 
@@ -97,7 +103,7 @@ Implementation should follow the recovered production architecture rather than i
 ## Dependency graph
 
 ```text
-Bluetooth
+Bluetooth bootstrap
    |
    v
 IapDeviceServices
@@ -108,24 +114,22 @@ CIapBTChannel
    v
 runtime endpoint
    |
-   +---- [unresolved endpoint owner / ABI]
+   +---- [MU0678 endpoint owner unresolved]
    |
    v
-iAP2 resource-manager ?
+bootstrap iAP2 / phone identity ?
+   |
+   v
+Wi-Fi AP / uap0
+   |
+   v
+AirPlay / Bonjour
    |
    v
 DIO / CarPlay
    |
-   +----------------------+
-   |                      |
-   v                      v
-iAP2                  AirPlay / Bonjour
-                          |
-                          v
-                   mDNS / socket layer
-                          |
-                          v
-                         uap0 ?
+   +---- session-side iAP2 over AirPlay ?
+
 ```
 
 Only the solid production components and recovered edges should be treated as evidence. The `?` and unresolved branches are investigation targets.
