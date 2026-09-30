@@ -533,6 +533,43 @@ This describes the discovered component relationship, not a claim that every con
 
 ---
 
+## 1.9 Direct MU0678 `bluetooth` ELF trace
+
+The production MU0678 `/eso/bin/apps/bluetooth` executable is now directly inspectable.
+
+It contains the policy/service strings:
+
+```text
+iapEnabled
+bluetooth.enableIap
+SERVICETYPE_IAP2
+ERROR_CARPLAY_ACTIVE
+Carplay
+```
+
+and defines the `CBluetoothApplication` and `CBluetoothSmartphoneIntegration` service/vtable objects.
+
+A real configuration-control function is present:
+
+```text
+CBluetoothApplication::switchBluetoothAccordingToConfig()  @ 0x13df18
+```
+
+It is called from `CBluetoothApplication::diagCBCodingValues(...)` at `0x146500` and checks application-state byte fields including offsets `0x1182`, `0x1186`, and `0x118a`.
+
+What is **not** established yet:
+
+- those fields are not proven to be the `bluetooth.enableIap` value;
+- no recovered defined `CBluetoothIap*`, concrete iAP endpoint-construction, or RFCOMM-server function symbols were found;
+- no direct undefined iAP/RFCOMM endpoint API imports were recovered;
+- therefore this executable cannot yet be named as the concrete endpoint publisher.
+
+This is a useful narrowing result rather than a dead end: the endpoint-owner search should now concentrate on the service-mediated path and `btstack`, while keeping ownership of the endpoint explicitly unproven until a function-level edge is recovered.
+
+**Evidence:** E-068, E-069. See TRACE-001 and TRACE-013.
+
+---
+
 ## 1.9 A2DP / AVRCP
 
 Production explicitly enables AAC and disables MP3:
