@@ -145,6 +145,6 @@ process → library → function → IPC/transport → device/socket
 
 with each important edge backed by an evidence-register entry.
 
-Wireless CarPlay should not be marked implemented or end-to-end proven until the Bluetooth endpoint/DIO handoff and the Wi-Fi/AirPlay interface-selection path are supported by MHI2-specific evidence.
+Wireless CarPlay should not be marked implemented or end-to-end proven until the MHI2-specific Bluetooth bootstrap path, wireless-session handoff into DIO, session-side iAP2/AirPlay capability, and Wi-Fi/AirPlay interface-selection path are supported by MHI2-specific evidence. Do not require a direct Bluetooth endpoint → DIO `/dev/ipod0` handoff unless MHI2 evidence actually establishes that architecture.
 
 **Latest trace:** [TRACE-013 — Bluetooth iAP2 → DIO / AirPlay Boundary](../traces/TRACE-013-bluetooth-iap2-dio-airplay-boundary.md)
