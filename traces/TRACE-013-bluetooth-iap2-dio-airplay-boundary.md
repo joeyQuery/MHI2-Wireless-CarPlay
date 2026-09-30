@@ -274,11 +274,32 @@ The binary does contain the policy/service-level strings iapEnabled, bluetooth.e
 
 This moves the endpoint-owner hypothesis downward one layer: the highest-value unresolved owner remains btstack or another lower Bluetooth/service component, with IapDeviceServices as the publication/consumption boundary already proven in iap.
 
+## 12. MU0678 `bluetooth` ELF is now directly inspected
+
+The production `/eso/bin/apps/bluetooth` ELF is now available for direct local inspection, so the previous repository-access limitation is retired.
+
+Concrete findings:
+
+- The binary contains `iapEnabled` and `bluetooth.enableIap` strings.
+- It contains `SERVICETYPE_IAP2`, `ERROR_CARPLAY_ACTIVE`, `Carplay`, and RFCOMM-related error text.
+- It defines `CBluetoothApplication` and `CBluetoothSmartphoneIntegration` service/vtable objects.
+- No recovered defined `CBluetoothIap*`, concrete iAP endpoint-construction, or RFCOMM-server function symbols were found.
+- No direct undefined iAP/RFCOMM endpoint API imports were recovered.
+- `CBluetoothApplication::switchBluetoothAccordingToConfig()` exists at `0x13df18` and is called from `CBluetoothApplication::diagCBCodingValues(...)` at `0x146500`.
+- That function checks several application-state byte fields, including offsets `0x1182`, `0x1186`, and `0x118a`, but those fields have **not** been proven to be `bluetooth.enableIap`.
+
+This is useful negative evidence: the concrete Bluetooth endpoint publisher is not exposed as an obvious direct iAP/RFCOMM API inside this executable. It narrows the remaining ownership search toward the service/proxy path and `btstack`, but does not prove `btstack` is the owner.
+
+**Evidence:** E-068, E-069.
+
 ## Updated remaining blocker
+
 
 The remaining static question is now narrower:
 
-> Does MU0678 btstack itself create/publish the runtime endpoint consumed through IapDeviceServices, and if so, what exact QNX resource-manager node and iAP2 ABI does it expose?
+> Which production component creates/publishes the runtime endpoint consumed through `IapDeviceServices`, and what exact QNX resource-manager node and iAP2 ABI does it expose?
+
+`btstack` remains the highest-value candidate because it is independently supervised and the inspected `bluetooth` ELF does not expose an obvious concrete endpoint-construction API. That is a search priority, **not yet a proven ownership edge**.
 
 If btstack does not contain that machinery, the next candidate must be another lower Bluetooth/service component; no evidence currently permits naming one.
 
