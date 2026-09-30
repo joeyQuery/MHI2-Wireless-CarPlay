@@ -119,6 +119,8 @@ AirPlayReceiverSessionScreen_SetClientIfMACAddr
 
 ## 5. Current recovered architecture
 
+The MU0678-specific evidence establishes two separate branches:
+
 ```text
 Bluetooth
    |
@@ -131,22 +133,54 @@ iap / CIapBTChannel
    v
 runtime-supplied endpoint
    |
-   +---- [unresolved bluetooth-side handoff]
-   |
-  DIO
-   |
-   +---- iAP2 / CarPlay state
-   |
-   +---- AirPlay / Bonjour
-              |
-              v
-        mDNS / socket layer
-              |
-              v
-          Wi-Fi path
+   +---- [MU0678 endpoint owner unresolved]
 ```
 
-This is an evidence-oriented convergence diagram. The dashed/unresolved handoff is not a proven execution edge.
+and independently:
+
+```text
+DIO
+   |
+   +---- iAP2 client -> configured /dev/ipod0
+   |
+   +---- AirPlay server / Bonjour / mDNS
+```
+
+These branches must **not** currently be joined as:
+
+```text
+Bluetooth endpoint -> DIO /dev/ipod0
+```
+
+The production evidence does not establish that edge.
+
+### MH2p reference correction
+
+The merged MH2p reference provides a concrete alternative architecture: its Bluetooth iAP2 endpoint is consumed by a separate bootstrap client (`iap2connectionmanager`/SI), while the wireless CarPlay session is started in DIO with Wi-Fi connection information and DIO's session-side iAP2 control travels through AirPlay (`iAPSendMessage`). This is **cross-platform reference evidence only** and does not prove MU0678 implements the same path.
+
+Therefore the useful target for MU0678 is now:
+
+```text
+Bluetooth bootstrap
+      |
+      v
+  iAP2 client
+      |
+      +---- phone identification / Wi-Fi bootstrap
+      |
+      v
+Wi-Fi AP (uap0)
+      |
+      v
+  AirPlay / mDNS
+      |
+      v
+     DIO
+      |
+      +---- session-side iAP2 over AirPlay ?   <-- MU0678 feature gap to resolve
+```
+
+The question is no longer simply "how does Bluetooth reach DIO?" It is whether MU0678 contains enough of the MH2p **bootstrap + Wi-Fi AirPlay + session-side iAP2** architecture to reproduce that sequence, or whether missing receiver-side protocol functionality must be ported.
 
 ## 6. Remaining blocker
 
