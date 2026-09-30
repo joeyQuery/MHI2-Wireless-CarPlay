@@ -718,3 +718,107 @@ CBluetoothTopologyReconnect +0x28
 This closes the currently available MU0678 `bluetooth` ELF trace. The remaining endpoint-owner question cannot be answered statically from this ELF alone. The exact MU0678 `btstack` ELF (1,912,117-byte artifact previously identified in the dump) is now the decisive missing binary for continuing this branch; alternatively, a runtime trace of the `IapDeviceServices` active-device callback containing the endpoint path would close it without btstack internals.
 
 **Evidence:** MU0678 `bluetooth` ELF; callers `0x17b598`, `0x17b938`, `0x17baf4`; helper `0x17b280`; branches `0x17b2dc`–`0x17b2e8`; common operation `0x179618`; negative string/import sweep.
+
+## 17. MU0678 btstack is now directly inspected: the missing Bluetooth iAP2 endpoint layer is present
+
+The exact MU0678 btstack ELF is now available for direct inspection. This closes the previous artifact blocker and materially changes the endpoint-owner conclusion.
+
+### 17.1 The binary contains a real btstack::IapDevice resource-manager implementation
+
+The ELF has the defined C++ vtable _ZTVN7btstack9IapDeviceE. The resource-manager path reaches the QNX resmgr_attach import at 0x118edc; the recovered direct call is at 0x23fc84, reached through the object-construction path around 0x23c028.
+
+The resource-manager constructor at 0x23fe24 copies a runtime-supplied path buffer into the resource-manager object and installs supplied connect/I/O callback tables. The callback tables are initialized with QNX iofunc machinery.
+
+This is concrete endpoint machinery in MU0678 btstack, not a hypothetical device-node concept.
+
+### 17.2 The endpoint base name is compiled into MU0678 btstack
+
+The exact string /dev/iapDevice occurs once in the binary at file offset 0x1bf790 (virtual 0x2bf790). It is used by the endpoint-construction path beginning at 0x23c720, where its length is obtained and an ipl::basic_string State is constructed before the resource-manager object is attached.
+
+The exact suffix appended to this base string is not yet proven by static inspection. Therefore the evidence establishes a compiled /dev/iapDevice endpoint family, but does not promote the MH2p /dev/iapDevice-<BT address> naming rule to MU0678.
+
+### 17.3 MU0678 contains the iAP2 accessory SDP record, including RFCOMM
+
+At virtual 0x2d250c the static record begins:
+
+35 0c / 35 03 19 01 00 / 35 05 19 00 03 08 00 / 35 11 / 1c 00000000-deca-fade-deca-deafdecacaff
+
+This is an SDP record containing L2CAP, RFCOMM UUID 0x0003, an RFCOMM channel byte initially zero in the template, and the iAP2 accessory UUID 00000000-deca-fade-deca-deafdecacaff.
+
+The same 84-byte record exists byte-for-byte at file offset 0x1d150c.
+
+Most importantly, the record is immediately adjacent to the weak static object at 0x2d2508, _ZZN...IapDeviceServicesServiceRegistration8getINameEvE5iname, whose value points to asi.connectivity.bluetooth.iap.IapDevice.
+
+This directly ties the iAP2/RFCOMM SDP record to the Bluetooth-side IapDeviceServices registration data rather than merely finding an unrelated UUID in firmware.
+
+### 17.4 IapServices contains an actual register/deregister service path
+
+The btstack ELF defines _ZTVN7btstack11IapServicesE. Its source strings include registerService, deregisterService, Removed iAP-SDP-Record. Channel: %p Status: %s, Deregistered RFComm channel. Channel: %p Status: %s, Registered RFComm channel. Channel: %p Status: %s, and Registered iAP-SDP-Record. RfComm Channel: %d Status: %s.
+
+A literal-pool entry at 0x237bd0 resolves from the btstack GOT base directly to virtual 0x2d250c, the exact SDP record above. Thus the IapServices registration path directly references the iAP2/RFCOMM record.
+
+The resulting static chain is:
+
+btstack::IapServices -> registerService -> SDP record @ 0x2d250c -> RFCOMM UUID 0x0003 + iAP2 accessory UUID -> Registered RFComm channel / Registered iAP-SDP-Record
+
+The exact BlueSDK internal RFCOMM function consuming the record remains behind stripped/local code and callback tables; no invented API name is assigned.
+
+### 17.5 IapDeviceServices IPC is a real production service in the same btstack
+
+The ELF contains the production service-registration classes _ZTVN3asi12connectivity9bluetooth3iap36IapDeviceServicesServiceRegistrationE, _ZTVN3asi12connectivity9bluetooth3iap18IapDeviceServicesSE, and _ZTVN3asi12connectivity9bluetooth3iap27IapDeviceServicesProxyReplyE, plus the interface name asi.connectivity.bluetooth.iap.IapDeviceServices.
+
+The ServiceRegistration and ServiceS vtables have concrete method bodies in this same executable. The btstack therefore contains both the Bluetooth iAP endpoint machinery and the service boundary used to publish it.
+
+### 17.6 What this closes, and what it does not
+
+Now proven in MU0678 itself:
+
+1. btstack owns a concrete IapDevice implementation.
+2. That implementation contains a QNX resource-manager attach path.
+3. The compiled endpoint base is /dev/iapDevice.
+4. The same binary contains the iAP2 accessory SDP service record.
+5. The SDP record explicitly advertises RFCOMM and the iAP2 accessory UUID.
+6. IapServices contains the register/deregister path and directly references that exact SDP record.
+7. IapDeviceServices is a production IPC/service-registration boundary in the same executable.
+
+Still not proven statically:
+
+- the final runtime endpoint suffix after /dev/iapDevice;
+- the exact code that writes the runtime RFCOMM channel into the SDP template's channel byte;
+- the exact lower-level BlueSDK RFCOMM registration symbol/callback behind the local/indirect calls;
+- the exact edge from a connected Bluetooth address through the iAP2 handshake into the final IapDevice path;
+- whether MU0678 uses the MH2p /dev/iapDevice-<16-hex-BT-address> convention.
+
+These are now narrow implementation details, not an unresolved question of whether MU0678 has the Bluetooth iAP2 endpoint architecture.
+
+### 17.7 Updated architecture boundary
+
+bluetooth.enableIap
+        |
+        v
+Bluetooth topology/reconnect policy
+        |
+        | [separate policy boundary]
+        v
+btstack
+  |
+  +--> IapServices
+  |      +--> RFCOMM service registration
+  |      +--> iAP2 accessory SDP record
+  |             UUID 00000000-deca-fade-deca-deafdecacaff
+  |
+  +--> IapDevice
+  |      +--> /dev/iapDevice... resource-manager endpoint
+  |      +--> QNX read/write/close resource-manager callbacks
+  |
+  +--> IapDeviceServices
+         |
+         v
+     Bluetooth iAP service IPC
+         |
+         v
+     iap / CIapBTChannel
+
+The direct enableIap -> btstack edge remains unproven. What is now proven is that the previously missing endpoint/RFCOMM machinery exists inside the independently supervised MU0678 btstack process, while enableIap remains a higher-level Bluetooth topology/reconnect policy flag.
+
+Evidence: exact uploaded MU0678 btstack ELF; IapDevice vtable; resmgr_attach @ 0x23fc84; resource-manager construction @ 0x23fe24; /dev/iapDevice @ file 0x1bf790; IapServices vtable; SDP record @ 0x2d250c; IapDeviceServices name pointer @ 0x2d2508; IapServices register/deregister strings and helper references.
