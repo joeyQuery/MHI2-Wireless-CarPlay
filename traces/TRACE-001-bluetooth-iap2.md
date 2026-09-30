@@ -127,15 +127,39 @@ The existence of these components is proven; the arrows after the component boun
 - E-006 — production `enableIap=false`
 - E-007 — Bluetooth-side iAP proxy exists
 
+## New MU0678 `bluetooth`-binary pass
+
+The previously missing MU0678 `/eso/bin/apps/bluetooth` ELF is now available for direct local inspection. It contains:
+
+```text
+iapEnabled
+bluetooth.enableIap
+SERVICETYPE_IAP2
+ERROR_CARPLAY_ACTIVE
+Carplay
+```
+
+and defines `CBluetoothApplication`, `CBluetoothSmartphoneIntegration`, and their service-registration/vtable objects. It does **not** expose recovered defined `CBluetoothIap*`, concrete iAP endpoint-construction, or RFCOMM-server function symbols, and no direct undefined iAP/RFCOMM endpoint API import was recovered.
+
+There is also a real configuration-control function:
+
+```text
+CBluetoothApplication::switchBluetoothAccordingToConfig()  @ 0x13df18
+```
+
+called from `CBluetoothApplication::diagCBCodingValues(...)` at `0x146500`. The function checks several `CBluetoothApplication` byte fields (including offsets `0x1182`, `0x1186`, and `0x118a`), but the current static pass does **not** prove that any of those fields is `bluetooth.enableIap`.
+
+Therefore the `bluetooth` ELF closes the previous artifact-availability limitation but does not yet close the endpoint-owner/`enableIap` branch.
+
 ## Required next trace
 
 Recover:
 
-1. configuration parser and branch for `enableIap`;
-2. caller/callee sequence into the Bluetooth iAP proxy;
-3. iAP2 transport creation;
-4. device/socket/IPC boundary;
-5. callback/event handoff into DIO;
+1. the field/object initialization that maps `bluetooth.enableIap` / `iapEnabled` onto the `CBluetoothApplication` state;
+2. the exact branch within or upstream of `switchBluetoothAccordingToConfig()` controlled by that value;
+3. the caller/callee sequence into `IapDeviceServices` when that branch is enabled;
+4. the publisher/owner of the runtime endpoint supplied to `CIapBTChannel`;
+5. the concrete endpoint value and whether it exposes the same QNX iAP2 resource-manager ABI as `ipod-drvr-iap2.so`;
 6. runtime confirmation against the same firmware baseline.
 
 ## Do not infer
