@@ -1,146 +1,145 @@
 # MHI2 Wireless CarPlay Roadmap
 
-This roadmap is dependency-oriented. A checkbox means the repository has established the item to the stated evidence standard; it does not mean a plausible architecture exists on paper.
+This roadmap is dependency-oriented. A checkbox means the repository has established the item to the stated evidence standard; it does not mean that Wireless CarPlay is implemented.
 
-## 1. Evidence / Baseline
+## 1. Production baseline
 
-- [x] Establish Marvell 8787 WLAN/BT architecture
-- [x] Establish Wi-Fi/AP infrastructure
+- [x] Establish Marvell 8787 shared WLAN/BT architecture
+- [x] Establish WLAN/AP infrastructure and `uap0`
 - [x] Establish Bluetooth infrastructure
-- [x] Establish iAP/iAP2 components
-- [x] Establish AirPlay/mDNS infrastructure
-- [x] Establish DIO as a CarPlay integration boundary
-- [x] Establish the production USB CarPlay transport
-- [x] Establish evidence/disproof documentation structure
-- [ ] Record complete firmware provenance for every analysis baseline
+- [x] Establish production Bluetooth iAP/iAP2 implementation
+- [x] Establish DIO as the CarPlay integration boundary
+- [x] Establish the production USB iAP2 path through `/dev/ipod0`
+- [x] Establish the production USB CarPlay network path through `carplay0`
+- [x] Establish AirPlay / Bonjour / mDNS infrastructure
+- [x] Establish evidence and trace hierarchy
+- [ ] Complete firmware provenance for every analysis baseline
 
-## 2. Bluetooth → iAP2
+## 2. Bluetooth iAP2 endpoint
 
-- [ ] Resolve `enableIap` parsing and control flow
-- [ ] Trace `bluetooth` → Bluetooth iAP proxy
-- [x] Trace Bluetooth active-device → iAP endpoint creation boundary
-- [ ] Resolve the exact runtime endpoint path returned by `IapDeviceServices`
-- [ ] Trace Bluetooth iAP → iAP2 transport creation
-- [ ] Identify the production HCI transport used by the relevant path
-- [ ] Trace iAP2 callbacks/events into DIO
+- [x] Identify `CIapBTChannel` and its open/connect/read/write/close path
+- [x] Identify the `CIapConnectorMachine` state-machine boundary
+- [x] Identify the `IapDeviceServices` RPC boundary
+- [x] Prove active-device information reaches `CIapBTChannel::updateiAPDevice()`
+- [x] Prove the Bluetooth endpoint reaches `open64()`
+- [x] Establish that the Bluetooth `iap` binary does not hard-code `/dev/ipod0`
+- [ ] Recover the exact endpoint value/path supplied by the Bluetooth service
+- [ ] Identify the owner/creator of that endpoint
+- [ ] Determine whether the endpoint is the same mounted QNX iAP2 resource-manager service used by `ipod-drvr-iap2.so`
+- [ ] Correlate the Bluetooth endpoint with the concrete iAP2 message ABI proven in TRACE-012
+- [ ] Trace the resulting iAP2 session into DIO
 
-**Dependency:** Bluetooth/iAP2 work must establish the real transport boundary before implementation changes are selected.
+**Current boundary:** TRACE-013. The Bluetooth implementation is proven; the endpoint ownership and DIO handoff are not.
 
+## 3. DIO iAP2 boundary
 
-## 2.1 MU0678 iAP2 transport-capability finding
+- [x] Trace DIO `CIpodAP2Service`
+- [x] Prove DIO passes a caller-supplied path into `iap2_connect()`
+- [x] Prove `/dev/ipod0` is the current production configuration rather than an intrinsic `iap2_connect()` restriction
+- [x] Prove the iAP2 client/driver resource-manager ABI
+- [ ] Determine whether DIO can consume the Bluetooth-side endpoint without a new transport ABI
+- [ ] Recover the iAP2 connection/disconnection state transitions for the wireless path
+- [ ] Establish the exact Bluetooth iAP2 → DIO handoff
 
-The MU0678 ipod-drvr-iap2.so binary contains generic transport callbacks plus compiled Bluetooth and Wi-Fi transport identification. The Wi-Fi transport descriptor explicitly carries iAP2-connection and CarPlay capability fields.
-
-The shipped /etc/mm/iap2.cfg nevertheless selects Lightning Connector and leaves the Bluetooth section commented out.
-
-The investigation boundary is therefore narrowed: the driver demonstrably has a wireless transport model, but the production wireless transport object/callback implementation, selection mechanism, and DIO handoff are still unresolved.
-
-## 3. DIO iAP2 Boundary
-
-- [ ] Trace `CIpodAP2Service`
-- [ ] Trace `/dev/ipod0` open/use path
-- [ ] Determine whether the service is transport-neutral
-- [ ] Identify the exact adaptation point for wireless iAP2
-- [ ] Recover connection/disconnection state transitions
-
-**Dependency:** Requires the Bluetooth/iAP2 trace above.
+**Dependency:** the Bluetooth endpoint trace must identify the actual endpoint before an implementation point is selected.
 
 ## 4. Wi-Fi / mDNS / AirPlay
 
-- [x] Identify the `mdnsd` consumer of `MDNS_DIRECTLINK_IFACE`
-- [ ] Prove how the production boot path exports `MDNS_DIRECTLINK_IFACE=carplay0` into the running `mdnsd` environment
-- [x] Trace `MDNS_DIRECTLINK_IFACE` through `mdnsd::SetupOneInterface()`
-- [ ] Trace final interface selection from mDNS/AirPlay into socket setup
-- [x] Determine that the production screen interface/transport/client-MAC setters are no-op stubs
-- [ ] Trace the actual AirPlay interface-selection path
-- [x] Retire the three screen setters as the presumed active transport selector
-- [ ] Recover where the AirPlay object's `interfaceName` field is populated
-- [ ] Recover packet/multicast interface helper arguments
-- [ ] Determine whether the recovered `interfaceName`/socket path can operate on `uap0` without modification
-- [ ] Correlate mDNS discovery with DIO session events
+- [x] Establish Marvell AP infrastructure and `uap0`
+- [x] Establish DHCP/DNS/PF support around `uap0`
+- [x] Establish production `MDNS_DIRECTLINK_IFACE=carplay0`
+- [x] Prove `mdnsd` consumes `MDNS_DIRECTLINK_IFACE`
+- [x] Prove AirPlay Bonjour registration uses its `interfaceName` field
+- [x] Prove the production screen interface/transport/client-MAC setters are no-op stubs
+- [x] Prove substantive packet-receive and multicast interface helpers exist
+- [ ] Recover where AirPlay `interfaceName` is populated
+- [ ] Trace callers and arguments of `SocketSetPacketReceiveInterface`
+- [ ] Trace callers and arguments of `SocketSetMulticastInterface`
+- [ ] Prove how the production boot path exports `MDNS_DIRECTLINK_IFACE=carplay0` into `mdnsd`
+- [ ] Determine whether the recovered AirPlay/mDNS path can operate on `uap0`
+- [ ] Correlate mDNS/AirPlay discovery with DIO session events
 
-**Dependency:** Interface-selection decisions should be based on the actual DIO/AirPlay call path, not on replacing `carplay0` by assumption.
+**Important correction:** do not use `AirPlayReceiverSessionScreen_SetIFName()`, `SetTransportType()`, or `SetClientIfMACAddr()` as evidence of active interface selection on MU0678. They are production no-op stubs.
 
-## 4.1 Newly recovered boundary state
+## 5. Bluetooth ↔ Wi-Fi session correlation
 
-The highest-value transport unknowns have narrowed substantially. Bluetooth iAP now has a proven runtime endpoint handoff into `open64()`, while DIO independently proves `/dev/ipod0`; the endpoint equality is unresolved. AirPlay now has a proven Bonjour interface-index path and a real `libairplay` → DNS-SD → `mdnsd` boundary. The remaining mDNS unknown is environment provenance, not consumer identity.
-
-## 5. Session Correlation
-
-- [ ] Correlate Bluetooth/iAP2 phone identity with Wi-Fi association and the runtime Bluetooth endpoint
+- [ ] Correlate Bluetooth phone identity with Wi-Fi association
+- [ ] Correlate Bluetooth/iAP2 endpoint identity with the same phone
 - [ ] Correlate iAP2 events with DIO CarPlay request/state
 - [ ] Correlate mDNS/AirPlay discovery with the same DIO session
-- [ ] Establish one end-to-end timestamped Wireless CarPlay trace
+- [ ] Produce one timestamped end-to-end Wireless CarPlay trace
 
-## 6. Media / Control Validation
+## 6. Session/media validation
 
-- [ ] Validate screen stream
-- [ ] Validate audio stream
+Only begin this section after the transport boundaries above are sufficiently proven.
+
+- [ ] Validate CarPlay session creation
+- [ ] Validate video
+- [ ] Validate audio
 - [ ] Validate HID/control
-- [ ] Validate session mode changes
+- [ ] Validate mode changes
 - [ ] Validate disconnect/finalization
 - [ ] Validate reconnection
 
 ## 7. Implementation
 
-Implementation should begin only after the relevant transport boundaries above are proven sufficiently to identify the correct adaptation point.
+Implementation should follow the recovered production architecture rather than introducing a parallel CarPlay stack.
 
-- [ ] Establish Wireless CarPlay Bluetooth bootstrap
-- [ ] Establish wireless iAP2 transport
-- [ ] Connect wireless iAP2 to DIO
-- [ ] Bind the network path to the verified interface
-- [ ] Connect wireless discovery to the existing AirPlay path
+- [ ] Establish the production Bluetooth bootstrap path
+- [ ] Establish the actual wireless iAP2 transport endpoint
+- [ ] Connect that endpoint to the existing DIO iAP2 boundary
+- [ ] Bind the verified Wi-Fi/mDNS/AirPlay path to the correct interface
+- [ ] Establish Bluetooth/Wi-Fi session correlation
 - [ ] Achieve a working Wireless CarPlay session
-- [ ] Validate full session lifecycle
+- [ ] Validate the complete lifecycle
 
-## Dependency Graph
+## Dependency graph
 
 ```text
 Bluetooth
-   │
-   ├── [unresolved activation/control path]
-   │          ↓
-   │      Bluetooth iAP
-   │          ↓
-   │      wireless iAP2
-   │          ↓
-   │      DIO iAP2 boundary
-   │                │
-   │                ├──────────────┐
-   │                ▼              │
-   │             CarPlay           │
-   │                ▲              │
-   │                │              │
-   └────────────────┘              │
-                                   │
-enableIap                           │
-   │                                │
-   └── [consumer/control branch unresolved]
-                                    │
-uap0 → mDNS → AirPlay ───────────────┘
+   |
+   v
+IapDeviceServices
+   |
+   v
+CIapBTChannel
+   |
+   v
+runtime endpoint
+   |
+   +---- [unresolved endpoint owner / ABI]
+   |
+   v
+iAP2 resource-manager ?
+   |
+   v
+DIO / CarPlay
+   |
+   +----------------------+
+   |                      |
+   v                      v
+iAP2                  AirPlay / Bonjour
+                          |
+                          v
+                   mDNS / socket layer
+                          |
+                          v
+                         uap0 ?
 ```
 
-The graph shows convergence targets, not proven call edges. In particular, the current evidence does **not** prove that `enableIap` directly gates Bluetooth iAP, nor that Bluetooth iAP directly becomes the wireless iAP2 transport.
+Only the solid production components and recovered edges should be treated as evidence. The `?` and unresolved branches are investigation targets.
 
-## Completion Criterion
+## Current completion criterion
 
 The investigation is complete when the major Wireless CarPlay path can be described as a reproducible chain of:
 
 ```text
-process → library → function → IPC/transport → device/socket → protocol event → session state
+process → library → function → IPC/transport → device/socket
+→ protocol event → session state
 ```
 
 with each important edge backed by an evidence-register entry.
 
+Wireless CarPlay should not be marked implemented or end-to-end proven until the Bluetooth endpoint/DIO handoff and the Wi-Fi/AirPlay interface-selection path are supported by MHI2-specific evidence.
 
-
-## 2.2 MU0678 iAP2 control-plane finding
-
-- [x] Establish executable Bluetooth iAP2 feature-startup machinery
-- [x] Establish shared iAP2 packet-dispatch handling for Bluetooth and Wi-Fi control events
-- [x] Establish accessory Wi-Fi configuration response fields
-- [x] Establish DIO Bluetooth Smartphone Integration / CarPlay control boundary
-- [ ] Prove production activation of these wireless paths
-- [ ] Correlate the selected iAP2 transport object with DIO
-
-The new trace narrows the problem from capability discovery to production activation and handoff. These checkboxes do not imply a working Wireless CarPlay session. See TRACE-008 and E-039 through E-043.
+**Latest trace:** [TRACE-013 — Bluetooth iAP2 → DIO / AirPlay Boundary](../traces/TRACE-013-bluetooth-iap2-dio-airplay-boundary.md)
