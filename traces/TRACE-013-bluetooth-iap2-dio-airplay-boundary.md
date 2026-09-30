@@ -193,3 +193,57 @@ E-014 through E-031, E-049 through E-055.
 - TRACE-008 — iAP2 control plane / DIO Bluetooth integration
 - TRACE-011 — DIO runtime iAP2 endpoint
 - TRACE-012 — iAP2 client → driver resource-manager boundary
+
+## 8. New MU0678 configuration/deployment trace
+
+The exact MU0678 application-image tree independently proves that btstack is a separately supervised production process:
+
+```text
+eso/production/connectivity.json
+
+applications:
+  bluetooth  -> /eso/bin/apps/bluetooth
+  btstack    -> /eso/bin/apps/btstack
+
+btstack:
+  exec: /eso/bin/apps/btstack
+  preCondition: /tmp/mvloaded
+```
+
+The same production configuration contains:
+
+```text
+bluetooth:
+  topologyLogic: 1
+  enableIap: false
+```
+
+This establishes an important separation: enableIap=false is a setting under the bluetooth application configuration, while the btstack process is independently launched when /tmp/mvloaded exists. Therefore enableIap cannot be described merely as the switch that starts btstack or creates its RFCOMM service.
+
+The shipped mm/iap2.cfg independently selects:
+
+```text
+[transport]
+name=Lightning Connector
+id=1234
+```
+
+Its commented [bluetooth] section is explicitly documented as Bluetooth Connection Status handling (mac, connectstatus, etc.), not as selection of the underlying iAP2 transport. This closes the interpretation that uncommenting that section is itself the production transport selector.
+
+The exact MU0678 dump also contains eso/bin/apps/btstack (1,912,117 bytes; blob d9309fc964aa4c6dbe92c180d8ba0dee61899328). The available repository binary-reading interface cannot decode this non-UTF-8 ELF, so its internal endpoint publisher still cannot be claimed from direct binary inspection.
+
+## 9. New negative evidence against bluetooth as the endpoint publisher
+
+The locally recovered MU0678 bluetooth ELF was inspected directly. Its defined C++ functions include CBluetoothApplication and CBluetoothSmartphoneIntegration, but no defined C++ CBluetoothIap* / iAP endpoint-construction / RFCOMM-server function symbols were recovered. Its dynamic dependencies are limited to the production framework libraries (libdsicommon, libiplcommon, libosal, libutil, libcomm, libirc_mmx_adapter, libecpp-ne, libc, libm). No direct undefined iAP/RFCOMM endpoint API symbols were recovered either.
+
+The binary does contain the policy/service-level strings iapEnabled, bluetooth.enableIap, SERVICETYPE_IAP2, ERROR_CARPLAY_ACTIVE, Carplay, and RFCOMM error handling. That is evidence for Bluetooth/iAP policy integration, but not evidence that this executable itself creates the concrete iAP endpoint.
+
+This moves the endpoint-owner hypothesis downward one layer: the highest-value unresolved owner remains btstack or another lower Bluetooth/service component, with IapDeviceServices as the publication/consumption boundary already proven in iap.
+
+## Updated remaining blocker
+
+The remaining static question is now narrower:
+
+> Does MU0678 btstack itself create/publish the runtime endpoint consumed through IapDeviceServices, and if so, what exact QNX resource-manager node and iAP2 ABI does it expose?
+
+If btstack does not contain that machinery, the next candidate must be another lower Bluetooth/service component; no evidence currently permits naming one.
