@@ -290,3 +290,50 @@ dio_manager
 ```
 
 Do not infer from `uap0`, `carplay0`, or the string `interfaceName` that either interface is selected. The active property-setting edge remains unresolved.
+
+## 12. Full GLOB_DAT trace: `AirPlayReceiverServerSetProperty` is active, but this call is not the wireless-interface setter
+
+The MU0678 `dio_manager` GLOB_DAT relocation at `0x19da70` is not an unused import. A complete static path was recovered:
+
+```text
+dio_manager .got
+  0x19da70 = AirPlayReceiverServerSetProperty
+       ^
+       | GOT base + 0x648
+       |
+function around 0x13f0xx
+  ldr r7, [pc, ...]       -> 0x648
+  ldr r2, [r4, r7]        -> GOT[0x648]
+  ...
+  bl 0x115a64             -> CFObjectSetPropertyCString
+       |
+       v
+libairplay::CFObjectSetPropertyCString
+       |
+       +--> CFStringCreateWithBytes(...)
+       |
+       +--> CFObjectSetProperty(...)
+                 |
+                 +--> bit 0 of flags is set
+                 +--> blx callback
+                         callback = AirPlayReceiverServerSetProperty
+```
+
+At the first recovered callsite (`0x13f128`), the callback pointer is explicitly loaded from GOT slot `0x19da70`. A second callsite (`0x13f1f0`) uses the same path. Therefore `R_ARM_GLOB_DAT` here is a real indirect callback edge, not dead linkage.
+
+The callsite also initializes a 17-byte temporary buffer with `memset(..., 0, 17)` and passes it through `CFObjectSetPropertyCString`; the length argument is `-1`, so the generated CFString follows the implementation's null-terminated-string path. The callback receives the server object and the property arguments through `CFObjectSetProperty`.
+
+Inside `libairplay::AirPlayReceiverServerSetProperty` (`0x1dc88`), the function uses `CFEqual` on its third argument against three internal property objects before taking the corresponding branches. This proves the indirect callback reaches the real server-property dispatcher.
+
+However, the property argument recovered at the MU0678 callsite is derived from a DIO read-only-data pointer and the temporary string is empty. The static pass does **not** recover the literal `interfaceName` as the property object at this callsite. Therefore this GLOB_DAT trace does not prove the DIO wireless-interface binding.
+
+### Consequence
+
+The earlier search target was too broad. The GLOB_DAT question is now closed at the linkage/execution level:
+
+- `AirPlayReceiverServerSetProperty` **is actively invoked** through the GLOB_DAT slot.
+- It reaches the real `libairplay` property dispatcher.
+- The recovered invocation is **not sufficient evidence that `interfaceName` is being set**.
+- The remaining MU0678 interface-selection question is the identity of the property object passed into the dispatcher and the separate path that would populate `interfaceName`.
+
+Therefore the active next AirPlay target is no longer the GLOB_DAT relocation itself; it is the property-object construction/population feeding `AirPlayReceiverServerSetProperty`.
