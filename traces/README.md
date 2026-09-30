@@ -28,6 +28,7 @@ No target arrow is evidence by itself.
 | [TRACE-010](TRACE-010-iap2-client-boundary.md) | MU0678 iAP2 client / media-synchronizer boundary | Partial |
 | [TRACE-011](TRACE-011-dio-runtime-iap2-endpoint.md) | MU0678 DIO runtime iAP2 endpoint path | Partial |
 | [TRACE-012](TRACE-012-iap2-client-resource-manager.md) | MU0678 iAP2 client → driver resource-manager boundary | Complete |
+| [TRACE-013](TRACE-013-bluetooth-iap2-dio-airplay-boundary.md) | MU0678 Bluetooth iAP2 → DIO / AirPlay boundary | Partial |
 
 ## Trace record format
 
