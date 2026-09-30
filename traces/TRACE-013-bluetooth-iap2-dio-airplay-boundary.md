@@ -248,29 +248,40 @@ The remaining static question is now narrower:
 
 If btstack does not contain that machinery, the next candidate must be another lower Bluetooth/service component; no evidence currently permits naming one.
 
-## 10. New DIO → AirPlay import/call trace
+## 10. Corrected DIO → AirPlay import/call trace
 
-Inspection of the pristine MU0678 `dio_manager` ELF establishes a useful negative/positive split:
+Inspection of the pristine MU0678 `dio_manager` ELF establishes this split:
 
-- `dio_manager` imports `AirPlayReceiverServerCreate` and `AirPlayReceiverServerSetDelegate`.
-- `dio_manager` also imports `AirPlayReceiverServerSetProperty` and has a recovered direct callsite to its PLT entry.
+- `dio_manager` imports `AirPlayReceiverServerCreate` and has a recovered direct call at `0x13f0b4`.
+- `dio_manager` imports `AirPlayReceiverServerSetDelegate` and has a recovered direct call at `0x13f34c`.
+- `AirPlayReceiverServerSetProperty` is present as a dynamic symbol, but its relocation is `R_ARM_GLOB_DAT` at `0x19da70`, not a normal PLT/JUMP_SLOT entry. I have **not** recovered a direct callsite to that symbol in the current static pass.
 - `dio_manager` does **not** import `SocketSetPacketReceiveInterface`, `SocketSetMulticastInterface`, `SocketSetBoundInterface`, or `IsWiFiNetworkInterface`.
-- `dio_manager` does **not** import the three `AirPlayReceiverSessionScreen_Set*` interface/transport setters.
+- `dio_manager` does import `CFObjectSetPropertyCString`, with direct callsites, but those calls have not been proven to set the AirPlay server's `interfaceName` property.
 
-The recovered `AirPlayReceiverServerSetProperty` callsite prepares a server object plus a caller-supplied argument and zeroed trailing arguments before entering the AirPlay library. The exact property key/value supplied on the relevant execution path is still unresolved.
+The earlier claim that a direct `AirPlayReceiverServerSetProperty` callsite had been recovered was therefore incorrect and is retired.
 
-This changes the AirPlay trace target: the packet/multicast helpers are not DIO-level calls. If they participate in production interface selection, their caller is inside `libairplay.so` or another AirPlay-linked component. The remaining DIO-side question is specifically which server property is set through `AirPlayReceiverServerSetProperty`, and whether that property is the `interfaceName` field later consumed by AirPlay Bonjour registration.
+The valid DIO-side trace currently stops at:
+
+```text
+dio_manager
+  |
+  +--> AirPlayReceiverServerCreate()       @ 0x13f0b4
+  |
+  +--> AirPlayReceiverServerSetDelegate()  @ 0x13f34c
+  |
+  +--> [server property population: unresolved]
+```
+
+The next static target is the GLOB_DAT-based use of `AirPlayReceiverServerSetProperty`, or the object/property construction path that ultimately populates AirPlay's `interfaceName`.
 
 ## 11. Current AirPlay boundary
 
 ```text
 dio_manager
   |
-  +--> AirPlayReceiverServerCreate()
-  +--> AirPlayReceiverServerSetDelegate()
-  +--> AirPlayReceiverServerSetProperty()   <-- proven active API call
-  |
-  +--> session/control APIs
+  +--> AirPlayReceiverServerCreate()       <-- direct call proven
+  +--> AirPlayReceiverServerSetDelegate()  <-- direct call proven
+  +--> AirPlayReceiverServerSetProperty()  <-- imported; direct caller unresolved
   |
   X--> SocketSetPacketReceiveInterface()    <-- not imported by DIO
   X--> SocketSetMulticastInterface()        <-- not imported by DIO
@@ -278,4 +289,4 @@ dio_manager
   X--> Screen_SetIFName/SetTransportType()  <-- not imported by DIO
 ```
 
-Do not infer from the presence of `uap0`, `carplay0`, or the string `interfaceName` in the DIO image that any of those values are currently selected for AirPlay. The missing edge is the actual property argument/value and its subsequent use inside the AirPlay library.
+Do not infer from `uap0`, `carplay0`, or the string `interfaceName` that either interface is selected. The active property-setting edge remains unresolved.
