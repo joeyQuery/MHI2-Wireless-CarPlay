@@ -155,3 +155,10 @@ Wireless CarPlay should not be marked implemented or end-to-end proven until the
 The MU0678 bluetooth ELF is now directly inspected. Its enableIap/iapEnabled policy strings and switchBluetoothAccordingToConfig() branch are proven, but the exact config-field mapping is not yet closed. The high-level bluetooth executable also does not expose a recovered concrete iAP endpoint-construction/RFCOMM-server API.
 
 The MH2p reference provides a concrete reference-only endpoint pattern: btstack creates /dev/iapDevice-<BT address> after the iAP2 probe bytes and reports it through updIapDevicePath. This is now the exact byte/string/function signature set to test against MU0678. It must not be promoted to MU0678 evidence until the MU0678 btstack ELF or a runtime capture confirms it.
+### 2026-09-30 MU0678 btstack endpoint closure
+
+The exact MU0678 btstack ELF is now directly inspected. The previous endpoint-owner blocker is closed: btstack contains btstack::IapDevice, a QNX resmgr_attach path, the compiled /dev/iapDevice endpoint base, IapServices register/deregister logic, and an iAP2 accessory SDP record that explicitly contains RFCOMM plus UUID 00000000-deca-fade-deca-deafdecacaff. The SDP record is directly adjacent to the IapDeviceServices registration name and the IapServices registration path directly references the record.
+
+The remaining static questions are now implementation details: the runtime suffix after /dev/iapDevice, the exact writer of the SDP RFCOMM channel byte, the lower-level local/indirect BlueSDK RFCOMM callback, and the exact connected-BT-address -> endpoint publication edge. The MH2p /dev/iapDevice-<BT-address> naming convention remains reference-only until MU0678-specific evidence closes it.
+
+Do not describe bluetooth.enableIap as the btstack startup or endpoint-creation switch. Its direct MU0678 consumer is still the Bluetooth topology/reconnect policy path traced in TRACE-013.
