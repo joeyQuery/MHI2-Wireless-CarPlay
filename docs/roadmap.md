@@ -202,3 +202,14 @@ This removes the RFCOMM channel producer from the remaining blocker list. The en
 ### 2026-09-30 endpoint pathname refinement — TRACE-016
 
 The IapDevice endpoint boundary is now narrower. The exact pathname consumed by QNX is IapDevice+0x0c -> resmgr_attach(). The pathname is copied from a runtime source pointer/length pair immediately before construction. The compiled /dev/iapDevice literal participates in the surrounding creation path, but final equality to that literal or an MH2p BT-address suffix is not proven. The remaining static target is specifically the producer of the source pair.
+
+
+### 2026-09-30 IapDevice Bluetooth-address closure — TRACE-017
+
+The endpoint trace was pushed through the next concrete lead. MU0678 btstack IapDevice fields `+0x28/+0x2c` are now proven to hold the connected Bluetooth device address: caller `0x23cd8c` reconstructs six address bytes from a Bluetooth-device object and passes the resulting 48-bit value to setter `0x23e394`, which stores the two words. A separate caller `0x23c36c` clears those fields.
+
+This does **not** prove that the Bluetooth address is formatted into the QNX endpoint pathname. The pathname consumed by `resmgr_attach()` still comes from the runtime string source pair `sp+0x154/sp+0x150`; the recovered creation case has no local store to those slots before use. The sole direct caller is `cbRf @ 0x23d500`, leaving the callback/ABI boundary as the exact remaining pathname target.
+
+Do not promote the MH2p `/dev/iapDevice-<BT address>` convention to MU0678. The MU0678 evidence currently proves the address storage and the separate runtime pathname path, but not their convergence.
+
+**Latest trace:** [TRACE-017 — IapDevice Bluetooth-address fields and pathname provenance boundary](../traces/TRACE-017-iapdevice-bt-address-pathname-boundary.md)
