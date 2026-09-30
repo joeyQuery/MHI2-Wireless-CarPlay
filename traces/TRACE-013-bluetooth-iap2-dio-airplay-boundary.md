@@ -247,3 +247,35 @@ The remaining static question is now narrower:
 > Does MU0678 btstack itself create/publish the runtime endpoint consumed through IapDeviceServices, and if so, what exact QNX resource-manager node and iAP2 ABI does it expose?
 
 If btstack does not contain that machinery, the next candidate must be another lower Bluetooth/service component; no evidence currently permits naming one.
+
+## 10. New DIO → AirPlay import/call trace
+
+Inspection of the pristine MU0678 `dio_manager` ELF establishes a useful negative/positive split:
+
+- `dio_manager` imports `AirPlayReceiverServerCreate` and `AirPlayReceiverServerSetDelegate`.
+- `dio_manager` also imports `AirPlayReceiverServerSetProperty` and has a recovered direct callsite to its PLT entry.
+- `dio_manager` does **not** import `SocketSetPacketReceiveInterface`, `SocketSetMulticastInterface`, `SocketSetBoundInterface`, or `IsWiFiNetworkInterface`.
+- `dio_manager` does **not** import the three `AirPlayReceiverSessionScreen_Set*` interface/transport setters.
+
+The recovered `AirPlayReceiverServerSetProperty` callsite prepares a server object plus a caller-supplied argument and zeroed trailing arguments before entering the AirPlay library. The exact property key/value supplied on the relevant execution path is still unresolved.
+
+This changes the AirPlay trace target: the packet/multicast helpers are not DIO-level calls. If they participate in production interface selection, their caller is inside `libairplay.so` or another AirPlay-linked component. The remaining DIO-side question is specifically which server property is set through `AirPlayReceiverServerSetProperty`, and whether that property is the `interfaceName` field later consumed by AirPlay Bonjour registration.
+
+## 11. Current AirPlay boundary
+
+```text
+dio_manager
+  |
+  +--> AirPlayReceiverServerCreate()
+  +--> AirPlayReceiverServerSetDelegate()
+  +--> AirPlayReceiverServerSetProperty()   <-- proven active API call
+  |
+  +--> session/control APIs
+  |
+  X--> SocketSetPacketReceiveInterface()    <-- not imported by DIO
+  X--> SocketSetMulticastInterface()        <-- not imported by DIO
+  X--> IsWiFiNetworkInterface()             <-- not imported by DIO
+  X--> Screen_SetIFName/SetTransportType()  <-- not imported by DIO
+```
+
+Do not infer from the presence of `uap0`, `carplay0`, or the string `interfaceName` in the DIO image that any of those values are currently selected for AirPlay. The missing edge is the actual property argument/value and its subsequent use inside the AirPlay library.
