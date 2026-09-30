@@ -162,3 +162,12 @@ The exact MU0678 btstack ELF is now directly inspected. The previous endpoint-ow
 The remaining static questions are now implementation details: the runtime suffix after /dev/iapDevice, the exact writer of the SDP RFCOMM channel byte, the lower-level local/indirect BlueSDK RFCOMM callback, and the exact connected-BT-address -> endpoint publication edge. The MH2p /dev/iapDevice-<BT-address> naming convention remains reference-only until MU0678-specific evidence closes it.
 
 Do not describe bluetooth.enableIap as the btstack startup or endpoint-creation switch. Its direct MU0678 consumer is still the Bluetooth topology/reconnect policy path traced in TRACE-013.
+
+
+### 2026-09-30 RFCOMM channel / endpoint-path refinement
+
+The MU0678 btstack trace now closes the SDP-byte writer. IapServices registration helper `0x23799c` reads `IapServices + 0x0c` and writes that value into the RFCOMM channel byte at `0x2d2519` of the iAP2 SDP record at `0x2d250c`, then calls lower-level SDP routine `0x20be48`. The producer of `IapServices + 0x0c` is still unresolved; it must not be confused with the SDP record or promoted to a named BlueSDK API without proof.
+
+The endpoint path is also narrowed: `0x23c720` loads the exact `/dev/iapDevice` string, constructs an iPL string-state object, and passes it into the resource-manager construction path ending at `resmgr_attach()` `0x23fc84`. MU0678-specific evidence still does not prove the MH2p `/dev/iapDevice-<BT address>` suffix convention.
+
+The remaining static endpoint targets are therefore the producer of the IapServices channel byte and the BT-address-to-final-endpoint pathname data-flow. Everything upstream of those boundaries is now concrete MU0678 evidence.
